@@ -24,11 +24,13 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorVidas;
 
+    [SerializeField] int musicToPlay;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         playerrb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        AudioManager.Instance.PlayMusic(musicToPlay);
     }
 
     // Update is called once per frame
@@ -73,6 +75,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("Jump", !isGrounded);
         if(Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
+            AudioManager.Instance.PlaySFX(1);
             playerrb.AddForce(Vector3.up * jumpForce, ForceMode2D.Impulse);
         }
     }
@@ -97,6 +100,7 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.CompareTag("PickUp"))
         {
+            AudioManager.Instance.PlaySFX(0);
             monedas++;
             contadorMonedas.text = "Monedas: " + monedas;
             Destroy(collision.gameObject);
@@ -107,7 +111,7 @@ public class PlayerController : MonoBehaviour
             contadorVidas.text = "Vidas: " + vidas;
             if (vidas <= 0)
             {
-                SceneManager.LoadScene("Scene2");
+                SceneManager.LoadScene("GameOver");
             }
         }
     }

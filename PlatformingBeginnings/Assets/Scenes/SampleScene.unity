@@ -332,6 +332,7 @@ MonoBehaviour:
   contadorMonedas: {fileID: 894606288}
   vidas: 3
   contadorVidas: {fileID: 832640741}
+  musicToPlay: 0
 --- !u!1 &92469629
 GameObject:
   m_ObjectHideFlags: 0
@@ -6626,6 +6627,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 412877487}
+  - component: {fileID: 412877488}
   m_Layer: 0
   m_Name: AudioManager
   m_TagString: Untagged
@@ -6650,6 +6652,26 @@ Transform:
   - {fileID: 1891104643}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &412877488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 412877486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 790f58a64949dad4f987a0033eb04d47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  musicList:
+  - {fileID: 8300000, guid: 7795e0b249e84cb4991775123370df0a, type: 3}
+  - {fileID: 8300000, guid: c8dfca6e1eee8074180384886b25c3ec, type: 3}
+  sfxList:
+  - {fileID: 8300000, guid: c7da5eeae63860047bd53f06a10fc267, type: 3}
+  - {fileID: 8300000, guid: bdc9d08f736d6954e80e48b742c86355, type: 3}
+  musicSource: {fileID: 2092073240}
+  sfxSource: {fileID: 1891104644}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -8923,7 +8945,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 324.2, y: -167}
+  m_AnchoredPosition: {x: 284.9, y: -167}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &832640741
@@ -9062,7 +9084,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -262.8, y: -163.125}
+  m_AnchoredPosition: {x: -216.2, y: -163.125}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &894606288

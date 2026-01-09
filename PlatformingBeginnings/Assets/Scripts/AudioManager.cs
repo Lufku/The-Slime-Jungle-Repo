@@ -2,7 +2,16 @@ using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
-   public static AudioManager Instance;
+    public static AudioManager Instance;
+
+    [Header("Audio Clip Arrays")]
+    public AudioClip[] musicList;
+    public AudioClip[] sfxList;
+
+    [Header("Audio Source References")]
+    [SerializeField] AudioSource musicSource;
+    [SerializeField] AudioSource sfxSource;
+
     private void Awake()
     { 
 
@@ -18,4 +27,14 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    public void PlayMusic(int musicIndex)
+    {
+        musicSource.clip = musicList[musicIndex];
+        musicSource.Play();
+    }
+
+    public void PlaySFX(int sfxIndex)
+    {
+        sfxSource.PlayOneShot(sfxList[sfxIndex]);
+    }
 }
