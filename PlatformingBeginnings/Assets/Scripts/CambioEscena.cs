@@ -6,7 +6,7 @@ public class CambioEscena : MonoBehaviour
 {
     public void Cambioescena()
     {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("CopySampleScene");
     }
 
     public void Salida()
