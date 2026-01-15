@@ -1,129 +1,114 @@
+using TMPro;
 using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Movement")]
     private Rigidbody2D playerrb;
     private Animator anim;
     private float horizontalInput;
 
-    public float speed = 5f;
+    [Header("Jump")]
+    public float speed;
+    public float jumpForce;
     private bool isFacingRight = true;
+    [SerializeField] bool isGrounded;
+    [SerializeField] GameObject groundCheck;
+    [SerializeField] LayerMask groundLayer;
+    
 
-    [Header("Jump Parameters")]
-    public float jumpForce = 10f;
-    public bool isGrounded;
-    private bool doubleJump;
+    [Header("UI")]
+    public int monedas = 0;
+    public TextMeshProUGUI contadorMonedas;
+    public int vidas = 3;
+    public TextMeshProUGUI contadorVidas;
 
-    [Header("Ground Check")]
-    public Transform groundCheck;
-    public float groundRadius = 0.2f;
-    public LayerMask groundLayer;
-
-    [Header("Attack")]
-    public float attackCooldown = 0.5f;
-    private bool canAttack = true;
-
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         playerrb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
     }
 
+    // Update is called once per frame
     void Update()
     {
-        Movimiento();
-        CheckGround();
-        HandleJump();
-        HandleAttack();
+        isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, 0.1f, groundLayer);
+        Movement();
+        Jump();
+        cambioescena();
     }
 
-    void Movimiento()
+    void Movement()
     {
         horizontalInput = Input.GetAxis("Horizontal");
         playerrb.linearVelocity = new Vector2(horizontalInput * speed, playerrb.linearVelocity.y);
 
+        //Flip
         if (horizontalInput > 0)
         {
             anim.SetBool("velocidad", true);
-            if (!isFacingRight) Flipeo();
+            if(!isFacingRight)
+            {
+                Flip();
+            }
         }
         else if (horizontalInput < 0)
         {
             anim.SetBool("velocidad", true);
-            if (isFacingRight) Flipeo();
-        }
-        else
-        {
-            anim.SetBool("velocidad", false);
-        }
-    }
-
-    void HandleJump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (isGrounded)
+            if(isFacingRight)
             {
-                Jump();
-                doubleJump = true;
-            }
-            else if (doubleJump)
-            {
-                Jump();
-                doubleJump = false;
+                Flip();
             }
         }
-    }
-
-    void HandleAttack()
-    {
-        if (Input.GetKeyDown(KeyCode.Q) && canAttack)
+        else if (horizontalInput == 0)
         {
-            StartCoroutine(Attack());
+          anim.SetBool("velocidad", false);
         }
-    }
-
-    IEnumerator Attack()
-    {
-        canAttack = false;
-        anim.SetTrigger("attack");
-        Debug.Log("Ataque ejecutado");
-
-        // Aquí puedes añadir hitbox o daño
-
-        yield return new WaitForSeconds(attackCooldown);
-        canAttack = true;
     }
 
     void Jump()
     {
-        // Reinicia la velocidad vertical antes de saltar
-        playerrb.linearVelocity = new Vector2(playerrb.linearVelocity.x, 0);
-        playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-        anim.SetTrigger("jump");
+        anim.SetBool("Jump", !isGrounded);
+        if(Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            playerrb.AddForce(Vector3.up * jumpForce, ForceMode2D.Impulse);
+        }
     }
-
-    void CheckGround()
-    {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
-        anim.SetBool("isGrounded", isGrounded);
-        // Debug para ver si detecta el suelo
-        Debug.Log("Grounded: " + isGrounded);
-    }
-
-    void Flipeo()
+     
+    void Flip()
     {
         Vector3 currentScale = transform.localScale;
         currentScale.x *= -1;
-        transform.localScale = currentScale;
+        transform.localScale = currentScale; 
         isFacingRight = !isFacingRight;
     }
 
-    void OnDrawGizmosSelected()
+    void cambioescena()
     {
-        Gizmos.color = Color.green;
-        if (groundCheck != null)
-            Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
+       if (Input.GetKeyDown(KeyCode.R))
+       {
+           SceneManager.LoadScene("Pruebica");
+       }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("PickUp"))
+        {
+            monedas++;
+            contadorMonedas.text = "Monedas: " + monedas;
+            Destroy(collision.gameObject);
+        }
+        if (collision.CompareTag("Pincho"))
+        {
+            vidas--;
+            contadorVidas.text = "Vidas: " + vidas;
+            if (vidas <= 0)
+            {
+                SceneManager.LoadScene("Scene2");
+            }
+        }
     }
 }
