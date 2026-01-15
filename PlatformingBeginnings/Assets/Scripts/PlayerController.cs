@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -6,20 +7,35 @@ public class PlayerController : MonoBehaviour
     private Animator anim;
     private float horizontalInput;
 
-    public float speed;
+    public float speed = 5f;
     private bool isFacingRight = true;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("Jump Parameters")]
+    public float jumpForce = 10f;
+    public bool isGrounded;
+    private bool doubleJump;
+
+    [Header("Ground Check")]
+    public Transform groundCheck;
+    public float groundRadius = 0.2f;
+    public LayerMask groundLayer;
+
+    [Header("Attack")]
+    public float attackCooldown = 0.5f;
+    private bool canAttack = true;
+
     void Start()
     {
         playerrb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        Movimiento();        
+        Movimiento();
+        CheckGround();
+        HandleJump();
+        HandleAttack();
     }
 
     void Movimiento()
@@ -30,24 +46,70 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput > 0)
         {
             anim.SetBool("velocidad", true);
-            if (!isFacingRight)
-            {
-                Flipeo();
-            }
+            if (!isFacingRight) Flipeo();
         }
         else if (horizontalInput < 0)
         {
             anim.SetBool("velocidad", true);
-            if (isFacingRight)
-            {
-                Flipeo();
-            }
+            if (isFacingRight) Flipeo();
         }
-        else if (horizontalInput == 0)
+        else
         {
             anim.SetBool("velocidad", false);
         }
+    }
 
+    void HandleJump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (isGrounded)
+            {
+                Jump();
+                doubleJump = true;
+            }
+            else if (doubleJump)
+            {
+                Jump();
+                doubleJump = false;
+            }
+        }
+    }
+
+    void HandleAttack()
+    {
+        if (Input.GetKeyDown(KeyCode.Q) && canAttack)
+        {
+            StartCoroutine(Attack());
+        }
+    }
+
+    IEnumerator Attack()
+    {
+        canAttack = false;
+        anim.SetTrigger("attack");
+        Debug.Log("Ataque ejecutado");
+
+        // Aquí puedes añadir hitbox o daño
+
+        yield return new WaitForSeconds(attackCooldown);
+        canAttack = true;
+    }
+
+    void Jump()
+    {
+        // Reinicia la velocidad vertical antes de saltar
+        playerrb.linearVelocity = new Vector2(playerrb.linearVelocity.x, 0);
+        playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        anim.SetTrigger("jump");
+    }
+
+    void CheckGround()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        anim.SetBool("isGrounded", isGrounded);
+        // Debug para ver si detecta el suelo
+        Debug.Log("Grounded: " + isGrounded);
     }
 
     void Flipeo()
@@ -56,5 +118,12 @@ public class PlayerController : MonoBehaviour
         currentScale.x *= -1;
         transform.localScale = currentScale;
         isFacingRight = !isFacingRight;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        if (groundCheck != null)
+            Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
 }
