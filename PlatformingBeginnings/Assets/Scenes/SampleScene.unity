@@ -406,7 +406,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Torreta
   RangoVision: 15
   player: {fileID: 1914591576}
-  bala: {fileID: 117512219003495514, guid: 3b97601385587914d9861fcbb5061906, type: 3}
+  balas:
+  - {fileID: 117512219003495514, guid: 8e159b1b7e72c574b8c41b6ecace63fa, type: 3}
+  - {fileID: 117512219003495514, guid: 3b97601385587914d9861fcbb5061906, type: 3}
+  - {fileID: 117512219003495514, guid: 91fac0049aeafb54eaa80af9d66994ee, type: 3}
   spawn: {fileID: 1182418814}
 --- !u!1 &619394800
 GameObject:
