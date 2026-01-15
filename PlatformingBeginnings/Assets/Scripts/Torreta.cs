@@ -10,11 +10,7 @@ public class Torreta : MonoBehaviour
     bool jugadorDetectado = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
 
-   void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, RangoVision);
-    }
+ 
     void Start()
     {
         
@@ -24,5 +20,18 @@ public class Torreta : MonoBehaviour
     void Update()
     {
         
+    }
+
+	void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Gizmos.DrawWireSphere(transform.position, RangoVision);
+	}
+
+    void deteccion()
+    {
+        float distancia = Vector2.Distance(transform.position, player.position);
+
+        if(distancia )
     }
 }
