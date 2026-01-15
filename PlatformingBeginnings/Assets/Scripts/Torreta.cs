@@ -7,7 +7,7 @@ public class Torreta : MonoBehaviour
     [SerializeField] Transform player;
 
     bool jugadorDetectado = false;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
     void Start()
     {
         
@@ -16,6 +16,28 @@ public class Torreta : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        deteccion();
+        //Disparo();
+    }
+
+
+	void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Gizmos.DrawWireSphere(transform.position, RangoVision);
+	}
+
+    void deteccion()
+    {
+        float distancia = Vector2.Distance(transform.position, player.position);
+
+        if(distancia <= RangoVision && !jugadorDetectado){
+        jugadorDetectado = true;
+        Debug.Log("Jugador Detectado");
+        }
+        else if(distancia > RangoVision && jugadorDetectado){
+            jugadorDetectado = false;
+            Debug.Log("Salí del rango");
+        }
     }
 }
