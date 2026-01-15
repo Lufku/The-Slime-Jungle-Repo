@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7965654540290786150}
   - component: {fileID: 2290853875667294190}
   - component: {fileID: -4201264163941820463}
+  - component: {fileID: -372993707802070263}
   m_Layer: 0
   m_Name: Bullet Ligero
   m_TagString: Bala
@@ -155,3 +156,16 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &-372993707802070263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117512219003495514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2cfed389e8df734ba3d7f7d3cc231bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MovimientoBala
+  speed: 5

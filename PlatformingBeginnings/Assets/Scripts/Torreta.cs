@@ -10,14 +10,15 @@ public class Torreta : MonoBehaviour
     bool jugadorenRango;
 
     [Header("Disparo de la Torreta")]
-    public GameObject bala;
+    public GameObject[] balas;   // Array de balas
     public Transform spawn;
+
+    bool disparoAutomatico;
 
     void Update()
     {
         deteccion();
-        Disparo();
-        
+        BalaAutomatica();
     }
 
     void OnDrawGizmos()
@@ -43,12 +44,37 @@ public class Torreta : MonoBehaviour
         }
     }
 
-    void Disparo()
+    void BalaAutomatica()
     {
-        if (jugadorenRango && (Input.GetKeyDown(KeyCode.F) || Input.GetMouseButtonDown(0)))
+        if (jugadorDetectado && !disparoAutomatico)
         {
-            Instantiate(bala, spawn.position, spawn.rotation);
-            Debug.Log("Bala Disparada");
+            InvokeRepeating(nameof(DisparoRandom), 0.5f, 0.5f);
+            disparoAutomatico = true;
+        }
+        else if (!jugadorDetectado && disparoAutomatico)
+        {
+            CancelInvoke(nameof(DisparoRandom));
+            disparoAutomatico = false;
+        }
+    }
+
+    void DisparoRandom()
+    {
+        int tipoBala = Random.Range(0, balas.Length);
+
+        Instantiate(balas[tipoBala], spawn.position, spawn.rotation);
+
+        switch (tipoBala)
+        {
+            case 0:
+                Debug.Log("Bala Ligera Disparada (5 de daño)");
+                break;
+            case 1:
+                Debug.Log("Bala Normal Disparada (10 de daño)");
+                break;
+            case 2:
+                Debug.Log("Bala Pesada Disparada (20 de daño)");
+                break;
         }
     }
 }

@@ -404,10 +404,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14b23183c7e48b64d97413c4807cc676, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Torreta
-  RangoVision: 8
+  RangoVision: 15
   player: {fileID: 1914591576}
   bala: {fileID: 117512219003495514, guid: 3b97601385587914d9861fcbb5061906, type: 3}
-  spawn: {fileID: 1247956454}
+  spawn: {fileID: 1182418814}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
