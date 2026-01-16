@@ -281,7 +281,7 @@ GameObject:
   - component: {fileID: 2838254319657512930}
   - component: {fileID: 2662819287875262516}
   - component: {fileID: 112527913973559334}
-  - component: {fileID: 2748546129546865772}
+  - component: {fileID: 9096453062845588980}
   m_Layer: 8
   m_Name: Platform
   m_TagString: Untagged
@@ -380,7 +380,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &2748546129546865772
+--- !u!114 &9096453062845588980
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -392,7 +392,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44eb17b375e3c2d45aa6383c08226fd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovingPlatform
-  speed: 0
+  speed: 2
+  startingPoint: 2
   points:
   - {fileID: 0}
   - {fileID: 0}
