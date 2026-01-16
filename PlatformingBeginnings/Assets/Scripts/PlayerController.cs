@@ -10,13 +10,18 @@ public class PlayerController : MonoBehaviour
     private float horizontalInput;
 
     [Header("Jump")]
-    public float speed;
-    public float jumpForce;
+    public float speed = 5f;
+    public float jumpForce = 10f;
     private bool isFacingRight = true;
     [SerializeField] bool isGrounded;
     [SerializeField] GameObject groundCheck;
     [SerializeField] LayerMask groundLayer;
-    
+
+    [Header("Attack")]
+    public float attackCooldown = 0.6f;
+    private bool canAttack = true;
+    private bool isAttacking = false;
+
 
     [Header("UI")]
     public int monedas = 0;
@@ -24,73 +29,98 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorVidas;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         playerrb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, 0.1f, groundLayer);
+        CheckGround();
         Movement();
         Jump();
+        Attack();
         cambioescena();
+        anim.SetFloat("verticalSpeed", playerrb.linearVelocity.y);
+
     }
+
+    void CheckGround()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, 0.15f, groundLayer);
+        Debug.Log("Grounded: " + isGrounded);
+    }
+
 
     void Movement()
     {
         horizontalInput = Input.GetAxis("Horizontal");
         playerrb.linearVelocity = new Vector2(horizontalInput * speed, playerrb.linearVelocity.y);
 
-        //Flip
-        if (horizontalInput > 0)
-        {
-            anim.SetBool("velocidad", true);
-            if(!isFacingRight)
-            {
-                Flip();
-            }
-        }
-        else if (horizontalInput < 0)
-        {
-            anim.SetBool("velocidad", true);
-            if(isFacingRight)
-            {
-                Flip();
-            }
-        }
-        else if (horizontalInput == 0)
-        {
-          anim.SetBool("velocidad", false);
-        }
+        anim.SetBool("velocidad", horizontalInput != 0);
+
+        if (horizontalInput > 0 && !isFacingRight) Flip();
+        if (horizontalInput < 0 && isFacingRight) Flip();
     }
+
 
     void Jump()
     {
-        anim.SetBool("Jump", !isGrounded);
-        if(Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            playerrb.AddForce(Vector3.up * jumpForce, ForceMode2D.Impulse);
+            // Resetear velocidad vertical
+            playerrb.linearVelocity = new Vector2(playerrb.linearVelocity.x, 0);
+
+            // Aplicar fuerza de salto
+            playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            // Animación
+            anim.SetTrigger("Jump");
         }
     }
-     
+
+
+    void Attack()
+    {
+        if (Input.GetKeyDown(KeyCode.Q) && canAttack && !isAttacking)
+        {
+            StartCoroutine(AttackCoroutine());
+        }
+    }
+
+    System.Collections.IEnumerator AttackCoroutine()
+    {
+        canAttack = false;
+        isAttacking = true;
+
+        // Detiene el movimiento mientras ataca
+        playerrb.linearVelocity = new Vector2(0, playerrb.linearVelocity.y);
+
+        anim.SetTrigger("Attack");
+
+        // Espera a que termine la animaci�n
+        yield return new WaitForSeconds(attackCooldown);
+
+        isAttacking = false;
+        canAttack = true;
+    }
+
+
     void Flip()
     {
         Vector3 currentScale = transform.localScale;
         currentScale.x *= -1;
-        transform.localScale = currentScale; 
+        transform.localScale = currentScale;
         isFacingRight = !isFacingRight;
     }
 
     void cambioescena()
     {
-       if (Input.GetKeyDown(KeyCode.R))
-       {
-           SceneManager.LoadScene("Pruebica");
-       }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene("Pruebica");
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -101,10 +131,12 @@ public class PlayerController : MonoBehaviour
             contadorMonedas.text = "Monedas: " + monedas;
             Destroy(collision.gameObject);
         }
+
         if (collision.CompareTag("Pincho"))
         {
             vidas--;
             contadorVidas.text = "Vidas: " + vidas;
+
             if (vidas <= 0)
             {
                 SceneManager.LoadScene("Scene2");
