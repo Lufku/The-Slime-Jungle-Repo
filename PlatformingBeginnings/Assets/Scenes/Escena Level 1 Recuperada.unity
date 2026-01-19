@@ -1236,7 +1236,7 @@ GameObject:
   - component: {fileID: 640840300}
   - component: {fileID: 640840299}
   - component: {fileID: 640840298}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -1258,10 +1258,10 @@ MonoBehaviour:
   speed: 5
   jumpForce: 0
   isGrounded: 0
-  groundCheck: {fileID: 0}
+  groundCheck: {fileID: 858215951}
   groundLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   monedas: 0
   contadorMonedas: {fileID: 0}
   vidas: 3
@@ -1570,7 +1570,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 858215952}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GroundCheck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
