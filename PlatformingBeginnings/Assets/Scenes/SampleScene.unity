@@ -177,7 +177,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 3
+  m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -312,7 +312,6 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
-  attackCooldown: 0.5
   monedas: 0
   contadorMonedas: {fileID: 0}
   vidas: 3
@@ -619,7 +618,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Torreta
   RangoVision: 15
-  player: {fileID: 108257184}
+  player: {fileID: 0}
   balas:
   - {fileID: 117512219003495514, guid: 8e159b1b7e72c574b8c41b6ecace63fa, type: 3}
   - {fileID: 117512219003495514, guid: 3b97601385587914d9861fcbb5061906, type: 3}
@@ -873,9 +872,9 @@ GameObject:
   - component: {fileID: 1974285154}
   - component: {fileID: 1974285153}
   - component: {fileID: 1974285155}
-  m_Layer: 8
+  m_Layer: 6
   m_Name: Ground
-  m_TagString: Ground
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3004,7 +3003,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512c763bb08a72d42a6ee3dd0e427efb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: "Assembly-CSharp::RotacionCa\xF1on"
-  player: {fileID: 108257184}
+  player: {fileID: 0}
 --- !u!1 &2098173163
 GameObject:
   m_ObjectHideFlags: 0

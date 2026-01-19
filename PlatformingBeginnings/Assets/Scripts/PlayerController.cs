@@ -4,143 +4,129 @@ using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement")]
-    private Rigidbody2D playerrb;
-    private Animator anim;
-    private float horizontalInput;
+	[Header("Movement")]
+	private Rigidbody2D playerrb;
+	private Animator anim;
+	private float horizontalInput;
 
-    [Header("Jump")]
-    public float speed = 5f;
-    public float jumpForce = 10f;
-    private bool isFacingRight = true;
-    [SerializeField] bool isGrounded;
-    [SerializeField] GameObject groundCheck;
-    [SerializeField] LayerMask groundLayer;
+	[Header("Jump")]
+	public float speed;
+	public float jumpForce;
+	private bool isFacingRight = true;
+	[SerializeField] bool isGrounded;
+	[SerializeField] GameObject groundCheck;
+	[SerializeField] LayerMask groundLayer;
+	private int saltosRestantes = 1;
 
-    [Header("Attack")]
-    public float attackCooldown = 0.6f;
-    private bool canAttack = true;
-    private bool isAttacking = false;
+	[Header("UI")]
+	public int monedas = 0;
+	public TextMeshProUGUI contadorMonedas;
+	public int vidas = 3;
+	public TextMeshProUGUI contadorVidas;
 
+	void Start()
+	{
+		playerrb = GetComponent<Rigidbody2D>();
+		anim = GetComponent<Animator>();
+	}
 
-    [Header("UI")]
-    public int monedas = 0;
-    public TextMeshProUGUI contadorMonedas;
-    public int vidas = 3;
-    public TextMeshProUGUI contadorVidas;
+	void Update()
+	{
+		isGrounded = Physics2D.OverlapCircle(
+			groundCheck.transform.position,
+			0.1f,
+			groundLayer
+		);
 
-    void Start()
-    {
-        playerrb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-    }
+		Movement();
+		Jump();
+		cambioescena();
+	}
 
-    void Update()
-    {
-        CheckGround();
-        Movement();
-        Jump();
-        Attack();
-        cambioescena();
-        anim.SetFloat("verticalSpeed", playerrb.linearVelocity.y);
+	void Movement()
+	{
+		horizontalInput = Input.GetAxis("Horizontal");
+		playerrb.linearVelocity = new Vector2(
+			horizontalInput * speed,
+			playerrb.linearVelocity.y
+		);
 
-    }
+		if (horizontalInput > 0)
+		{
+			anim.SetBool("velocidad", true);
+			if (!isFacingRight)
+				Flip();
+		}
+		else if (horizontalInput < 0)
+		{
+			anim.SetBool("velocidad", true);
+			if (isFacingRight)
+				Flip();
+		}
+		else
+		{
+			anim.SetBool("velocidad", false);
+		}
+	}
 
-    void CheckGround()
-    {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, 0.15f, groundLayer);
-        Debug.Log("Grounded: " + isGrounded);
-    }
+	void Jump()
+	{
+		anim.SetBool("Jump", !isGrounded);
 
+		if (isGrounded)
+		{
+			saltosRestantes = 1;
+		}
 
-    void Movement()
-    {
-        horizontalInput = Input.GetAxis("Horizontal");
-        playerrb.linearVelocity = new Vector2(horizontalInput * speed, playerrb.linearVelocity.y);
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			if (isGrounded)
+			{
+				playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+			}
+			else if (saltosRestantes > 0)
+			{
+				playerrb.linearVelocity = new Vector2(playerrb.linearVelocity.x, 0);
+				playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+				saltosRestantes--;
+			}
+		}
+	}
 
-        anim.SetBool("velocidad", horizontalInput != 0);
+	void Flip()
+	{
+		Vector3 scale = transform.localScale;
+		scale.x *= -1;
+		transform.localScale = scale;
+		isFacingRight = !isFacingRight;
+	}
 
-        if (horizontalInput > 0 && !isFacingRight) Flip();
-        if (horizontalInput < 0 && isFacingRight) Flip();
-    }
+	void cambioescena()
+	{
+		if (Input.GetKeyDown(KeyCode.R))
+		{
+			SceneManager.LoadScene("Pruebica");
+		}
+	}
 
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		if (collision.CompareTag("PickUp"))
+		{
+			monedas++;
+			contadorMonedas.text = "Monedas: " + monedas;
+			Destroy(collision.gameObject);
+		}
 
-    void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-        {
-            // Resetear velocidad vertical
-            playerrb.linearVelocity = new Vector2(playerrb.linearVelocity.x, 0);
+		if (collision.CompareTag("Pincho"))
+		{
+			vidas--;
+			contadorVidas.text = "Vidas: " + vidas;
 
-            // Aplicar fuerza de salto
-            playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-            // Animación
-            anim.SetTrigger("Jump");
-        }
-    }
-
-
-    void Attack()
-    {
-        if (Input.GetKeyDown(KeyCode.Q) && canAttack && !isAttacking)
-        {
-            StartCoroutine(AttackCoroutine());
-        }
-    }
-
-    System.Collections.IEnumerator AttackCoroutine()
-    {
-        canAttack = false;
-        isAttacking = true;
-
-        // Detiene el movimiento mientras ataca
-        playerrb.linearVelocity = new Vector2(0, playerrb.linearVelocity.y);
-
-        anim.SetTrigger("Attack");
-
-        // Espera a que termine la animaci�n
-        yield return new WaitForSeconds(attackCooldown);
-
-        isAttacking = false;
-        canAttack = true;
-    }
-
-
-    void Flip()
-    {
-        Vector3 currentScale = transform.localScale;
-        currentScale.x *= -1;
-        transform.localScale = currentScale;
-        isFacingRight = !isFacingRight;
-    }
-
-    void cambioescena()
-    {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SceneManager.LoadScene("Pruebica");
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("PickUp"))
-        {
-            monedas++;
-            contadorMonedas.text = "Monedas: " + monedas;
-            Destroy(collision.gameObject);
-        }
-
-        if (collision.CompareTag("Pincho"))
-        {
-            vidas--;
-            contadorVidas.text = "Vidas: " + vidas;
-
-            if (vidas <= 0)
-            {
-                SceneManager.LoadScene("Scene2");
-            }
-        }
-    }
+			if (vidas <= 0)
+			{
+				SceneManager.LoadScene("Scene2");
+			}
+		}
+	}
 }
