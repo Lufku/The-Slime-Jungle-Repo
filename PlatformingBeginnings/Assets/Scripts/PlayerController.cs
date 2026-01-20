@@ -4,129 +4,270 @@ using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-	[Header("Movement")]
-	private Rigidbody2D playerrb;
-	private Animator anim;
-	private float horizontalInput;
+    [Header("Movement")]
+    private Rigidbody2D rb;
+    private Animator anim;
+    private float horizontalInput;
+    public float speed = 5f;
+    private bool isFacingRight = true;
 
-	[Header("Jump")]
-	public float speed;
-	public float jumpForce;
-	private bool isFacingRight = true;
-	[SerializeField] bool isGrounded;
-	[SerializeField] GameObject groundCheck;
-	[SerializeField] LayerMask groundLayer;
-	private int saltosRestantes = 1;
+    [Header("Jump")]
+    public float jumpForce = 8f;
+    private bool isGrounded;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundLayer;
+    public float groundRadius = 0.3f;
 
-	[Header("UI")]
-	public int monedas = 0;
-	public TextMeshProUGUI contadorMonedas;
-	public int vidas = 3;
-	public TextMeshProUGUI contadorVidas;
+    [Header("Dash")]
+    public float dashSpeed = 15f;
+    public float dashDuration = 0.2f;
+    private bool isDashing = false;
+    private float lastTapTime;
+    private float doubleTapDelay = 0.3f;
 
-	void Start()
-	{
-		playerrb = GetComponent<Rigidbody2D>();
-		anim = GetComponent<Animator>();
-	}
+    [Header("Dash Attack")]
+    public float dashAttackSpeed = 20f;
+    public float dashAttackDuration = 0.2f;
+    private bool isDashAttacking = false;
 
-	void Update()
-	{
-		isGrounded = Physics2D.OverlapCircle(
-			groundCheck.transform.position,
-			0.1f,
-			groundLayer
-		);
+    [Header("Combat")]
+    public float attackCooldown = 0.5f;
+    private bool canAttack = true;
+    private bool isDead = false;
 
-		Movement();
-		Jump();
-		cambioescena();
-	}
+    [Header("UI")]
+    public int monedas = 0;
+    public TextMeshProUGUI contadorMonedas;
+    public int vidas = 3;
+    public TextMeshProUGUI contadorVidas;
 
-	void Movement()
-	{
-		horizontalInput = Input.GetAxis("Horizontal");
-		playerrb.linearVelocity = new Vector2(
-			horizontalInput * speed,
-			playerrb.linearVelocity.y
-		);
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
+        anim.SetBool("isGrounded", true);
+    }
 
-		if (horizontalInput > 0)
-		{
-			anim.SetBool("velocidad", true);
-			if (!isFacingRight)
-				Flip();
-		}
-		else if (horizontalInput < 0)
-		{
-			anim.SetBool("velocidad", true);
-			if (isFacingRight)
-				Flip();
-		}
-		else
-		{
-			anim.SetBool("velocidad", false);
-		}
-	}
+    void Update()
+    {
+        if (isDead || isDashing || isDashAttacking) return;
 
-	void Jump()
-	{
-		anim.SetBool("Jump", !isGrounded);
+        CheckGround();
+        DetectDashAttackInput(); // <-- Dash Attack
+        Movement();
+        Jump();
+        Attack();
+        Crouch();
+        DetectDashInput();      // <-- Dash normal
+        UpdateAnimations();
+        cambioescena();
+    }
 
-		if (isGrounded)
-		{
-			saltosRestantes = 1;
-		}
+    // ---------- Ground ----------
+    void CheckGround()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+    }
 
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			if (isGrounded)
-			{
-				playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-			}
-			else if (saltosRestantes > 0)
-			{
-				playerrb.linearVelocity = new Vector2(playerrb.linearVelocity.x, 0);
-				playerrb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-				saltosRestantes--;
-			}
-		}
-	}
+    // ---------- Movement ----------
+    void Movement()
+    {
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        rb.linearVelocity = new Vector2(horizontalInput * speed, rb.linearVelocity.y);
 
-	void Flip()
-	{
-		Vector3 scale = transform.localScale;
-		scale.x *= -1;
-		transform.localScale = scale;
-		isFacingRight = !isFacingRight;
-	}
+        anim.SetBool("velocidad", horizontalInput != 0);
 
-	void cambioescena()
-	{
-		if (Input.GetKeyDown(KeyCode.R))
-		{
-			SceneManager.LoadScene("Pruebica");
-		}
-	}
+        if (horizontalInput > 0 && !isFacingRight) Flip();
+        if (horizontalInput < 0 && isFacingRight) Flip();
+    }
 
-	private void OnTriggerEnter2D(Collider2D collision)
-	{
-		if (collision.CompareTag("PickUp"))
-		{
-			monedas++;
-			contadorMonedas.text = "Monedas: " + monedas;
-			Destroy(collision.gameObject);
-		}
+    // ---------- Jump ----------
+    void Jump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            anim.SetTrigger("Jump");
+        }
+    }
 
-		if (collision.CompareTag("Pincho"))
-		{
-			vidas--;
-			contadorVidas.text = "Vidas: " + vidas;
+    // ---------- Attack ----------
+    void Attack()
+    {
+        if (Input.GetKeyDown(KeyCode.Q) && canAttack && isGrounded && !isDashAttacking)
+        {
+            StartCoroutine(AttackCoroutine());
+        }
+    }
 
-			if (vidas <= 0)
-			{
-				SceneManager.LoadScene("Scene2");
-			}
-		}
-	}
+    System.Collections.IEnumerator AttackCoroutine()
+    {
+        canAttack = false;
+        anim.SetTrigger("Attack");
+        yield return new WaitForSeconds(attackCooldown);
+        canAttack = true;
+    }
+
+    // ---------- Crouch ----------
+    private bool wasCrouching = false;
+
+    void Crouch()
+    {
+        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+
+        if (crouchInput && isGrounded)
+        {
+            if (!wasCrouching)
+            {
+                anim.SetBool("isCrouching", true);
+                wasCrouching = true;
+            }
+        }
+        else
+        {
+            if (wasCrouching)
+            {
+                anim.SetTrigger("exitCrouch");
+                anim.SetBool("isCrouching", false);
+                wasCrouching = false;
+            }
+        }
+    }
+
+    // ---------- Dash ----------
+    void DetectDashInput()
+    {
+        if (!isGrounded || isDashAttacking) return;
+
+        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow) ||
+            Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            if (Time.time - lastTapTime <= doubleTapDelay)
+            {
+                StartCoroutine(Dash());
+            }
+            lastTapTime = Time.time;
+        }
+    }
+
+    System.Collections.IEnumerator Dash()
+    {
+        isDashing = true;
+        anim.SetTrigger("Dash");
+
+        float direction = isFacingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(direction * dashSpeed, 0);
+
+        yield return new WaitForSeconds(dashDuration);
+
+        rb.linearVelocity = Vector2.zero;
+        isDashing = false;
+    }
+
+    // ---------- Dash Attack ----------
+    void DetectDashAttackInput()
+    {
+        if (!isGrounded || isDashAttacking) return;
+
+        if (Input.GetKey(KeyCode.E))
+        {
+            StartCoroutine(DashAttack());
+        }
+    }
+
+    System.Collections.IEnumerator DashAttack()
+    {
+        isDashAttacking = true;
+        canAttack = false;
+        anim.SetTrigger("DashAttack");
+
+        float direction = isFacingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(direction * dashAttackSpeed, 0);
+
+        yield return new WaitForSeconds(dashAttackDuration);
+
+        rb.linearVelocity = Vector2.zero;
+        isDashAttacking = false;
+        canAttack = true;
+    }
+
+    // ---------- Animations ----------
+    void UpdateAnimations()
+    {
+        anim.SetBool("isGrounded", isGrounded);
+        anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
+    }
+
+    // ---------- Utils ----------
+    void Flip()
+    {
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+        isFacingRight = !isFacingRight;
+    }
+
+    void cambioescena()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene("Pruebica");
+        }
+    }
+
+    // ---------- Damage ----------
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("PickUp"))
+        {
+            monedas++;
+            contadorMonedas.text = "Monedas: " + monedas;
+            Destroy(collision.gameObject);
+        }
+
+        if (collision.CompareTag("Pincho"))
+        {
+            TakeDamage();
+        }
+    }
+
+    void TakeDamage()
+    {
+        if (isDead) return;
+
+        vidas--;
+        contadorVidas.text = "Vidas: " + vidas;
+        anim.SetTrigger("Hurt");
+
+        if (vidas <= 0)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+        anim.SetTrigger("Death");
+
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
+
+        Invoke(nameof(LoadDeathScene), 2f);
+    }
+
+    void LoadDeathScene()
+    {
+        SceneManager.LoadScene("Scene2");
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (groundCheck == null) return;
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
+    }
 }
