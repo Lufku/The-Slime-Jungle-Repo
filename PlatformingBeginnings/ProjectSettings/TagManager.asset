@@ -7,6 +7,10 @@ TagManager:
   - Ground
   - PickUp
   - Pincho
+  - Torreta
+  - Bala
+  - Ramp
+  - Slime
   layers:
   - Default
   - TransparentFX

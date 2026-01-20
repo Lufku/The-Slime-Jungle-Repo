@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     public float groundRadius = 0.3f;
+    private int maxJumps = 2;    // Doble salto
+    private int jumpCount = 0;
 
     [Header("Dash")]
     public float dashSpeed = 15f;
@@ -41,6 +43,8 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorVidas;
 
+    private bool wasCrouching = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -50,28 +54,37 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (isDead || isDashing || isDashAttacking) return;
+        if (isDead) return;
 
         CheckGround();
-        DetectDashAttackInput(); // <-- Dash Attack
+        DetectDashAttackInput();
         Movement();
         Jump();
         Attack();
         Crouch();
-        DetectDashInput();      // <-- Dash normal
+        DetectDashInput();
         UpdateAnimations();
-        cambioescena();
     }
 
     // ---------- Ground ----------
     void CheckGround()
     {
+        bool wasGrounded = isGrounded;
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+
+        anim.SetBool("isGrounded", isGrounded);
+
+        if (isGrounded && !wasGrounded)
+        {
+            jumpCount = 0; // Resetear saltos al tocar el suelo
+        }
     }
 
     // ---------- Movement ----------
     void Movement()
     {
+        if (isDashing || isDashAttacking) return;
+
         horizontalInput = Input.GetAxisRaw("Horizontal");
         rb.linearVelocity = new Vector2(horizontalInput * speed, rb.linearVelocity.y);
 
@@ -84,11 +97,17 @@ public class PlayerController : MonoBehaviour
     // ---------- Jump ----------
     void Jump()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            anim.SetTrigger("Jump");
+
+            if (jumpCount == 0)
+                anim.SetTrigger("Jump");       // Primer salto desde el suelo
+            else
+                anim.SetTrigger("DoubleJump"); // Segundo salto en aire
+
+            jumpCount++;
         }
     }
 
@@ -110,8 +129,6 @@ public class PlayerController : MonoBehaviour
     }
 
     // ---------- Crouch ----------
-    private bool wasCrouching = false;
-
     void Crouch()
     {
         bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
@@ -144,9 +161,8 @@ public class PlayerController : MonoBehaviour
             Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
         {
             if (Time.time - lastTapTime <= doubleTapDelay)
-            {
                 StartCoroutine(Dash());
-            }
+
             lastTapTime = Time.time;
         }
     }
@@ -171,9 +187,7 @@ public class PlayerController : MonoBehaviour
         if (!isGrounded || isDashAttacking) return;
 
         if (Input.GetKey(KeyCode.E))
-        {
             StartCoroutine(DashAttack());
-        }
     }
 
     System.Collections.IEnumerator DashAttack()
@@ -192,28 +206,18 @@ public class PlayerController : MonoBehaviour
         canAttack = true;
     }
 
-    // ---------- Animations ----------
+    // ---------- Utils ----------
     void UpdateAnimations()
     {
-        anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
     }
 
-    // ---------- Utils ----------
     void Flip()
     {
         Vector3 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
         isFacingRight = !isFacingRight;
-    }
-
-    void cambioescena()
-    {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SceneManager.LoadScene("Pruebica");
-        }
     }
 
     // ---------- Damage ----------
@@ -227,9 +231,7 @@ public class PlayerController : MonoBehaviour
         }
 
         if (collision.CompareTag("Pincho"))
-        {
             TakeDamage();
-        }
     }
 
     void TakeDamage()
@@ -240,10 +242,7 @@ public class PlayerController : MonoBehaviour
         contadorVidas.text = "Vidas: " + vidas;
         anim.SetTrigger("Hurt");
 
-        if (vidas <= 0)
-        {
-            Die();
-        }
+        if (vidas <= 0) Die();
     }
 
     void Die()
@@ -261,7 +260,7 @@ public class PlayerController : MonoBehaviour
 
     void LoadDeathScene()
     {
-        SceneManager.LoadScene("Scene2");
+        SceneManager.LoadScene("GameOver");
     }
 
     private void OnDrawGizmosSelected()
