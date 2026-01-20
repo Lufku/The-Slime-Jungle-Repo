@@ -104,11 +104,35 @@ public class PlayerController : MonoBehaviour
     }
 
     // ---------- Crouch ----------
+    // ---------- Crouch ----------
+    private bool wasCrouching = false;
+
     void Crouch()
     {
         bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
-        anim.SetBool("crouch", crouchInput && isGrounded);
+
+        if (crouchInput && isGrounded)
+        {
+            if (!wasCrouching)
+            {
+                // Comenzamos crouch
+                anim.SetBool("isCrouching", true);
+                wasCrouching = true;
+            }
+            // Mientras se mantiene presionado, la animación de hold se hace en loop automáticamente
+        }
+        else
+        {
+            if (wasCrouching)
+            {
+                // Salimos de crouch
+                anim.SetTrigger("exitCrouch");
+                anim.SetBool("isCrouching", false);
+                wasCrouching = false;
+            }
+        }
     }
+
 
     // ---------- Dash ----------
     void DetectDashInput()
