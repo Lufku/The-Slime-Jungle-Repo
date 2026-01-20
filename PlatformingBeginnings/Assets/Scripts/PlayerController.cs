@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     public float groundRadius = 0.3f;
-    private int maxJumps = 2;    // Doble salto
+    private int maxJumps = 2;
     private int jumpCount = 0;
 
     [Header("Dash")]
@@ -37,6 +37,9 @@ public class PlayerController : MonoBehaviour
     private bool canAttack = true;
     private bool isDead = false;
 
+    [Header("Attack Hitbox")]
+    public GameObject attackHitbox;
+
     [Header("UI")]
     public int monedas = 0;
     public TextMeshProUGUI contadorMonedas;
@@ -50,6 +53,16 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         anim.SetBool("isGrounded", true);
+
+        // Desactivar hitbox si existe
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+
+        // Inicializar UI seguro
+        if (contadorVidas != null)
+            contadorVidas.text = "Vidas: " + vidas;
+        if (contadorMonedas != null)
+            contadorMonedas.text = "Monedas: " + monedas;
     }
 
     void Update()
@@ -75,9 +88,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("isGrounded", isGrounded);
 
         if (isGrounded && !wasGrounded)
-        {
-            jumpCount = 0; // Resetear saltos al tocar el suelo
-        }
+            jumpCount = 0;
     }
 
     // ---------- Movement ----------
@@ -103,9 +114,9 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
             if (jumpCount == 0)
-                anim.SetTrigger("Jump");       // Primer salto desde el suelo
+                anim.SetTrigger("Jump");
             else
-                anim.SetTrigger("DoubleJump"); // Segundo salto en aire
+                anim.SetTrigger("DoubleJump");
 
             jumpCount++;
         }
@@ -115,15 +126,24 @@ public class PlayerController : MonoBehaviour
     void Attack()
     {
         if (Input.GetKeyDown(KeyCode.Q) && canAttack && isGrounded && !isDashAttacking)
-        {
             StartCoroutine(AttackCoroutine());
-        }
     }
 
     System.Collections.IEnumerator AttackCoroutine()
     {
         canAttack = false;
         anim.SetTrigger("Attack");
+
+        yield return new WaitForSeconds(0.1f);
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(true);
+
+        yield return new WaitForSeconds(0.2f);
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
     }
@@ -199,7 +219,15 @@ public class PlayerController : MonoBehaviour
         float direction = isFacingRight ? 1 : -1;
         rb.linearVelocity = new Vector2(direction * dashAttackSpeed, 0);
 
+        yield return new WaitForSeconds(0.05f);
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(true);
+
         yield return new WaitForSeconds(dashAttackDuration);
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
 
         rb.linearVelocity = Vector2.zero;
         isDashAttacking = false;
@@ -218,6 +246,14 @@ public class PlayerController : MonoBehaviour
         scale.x *= -1;
         transform.localScale = scale;
         isFacingRight = !isFacingRight;
+
+        // Flip hitbox
+        if (attackHitbox != null)
+        {
+            Vector3 pos = attackHitbox.transform.localPosition;
+            pos.x *= -1;
+            attackHitbox.transform.localPosition = pos;
+        }
     }
 
     // ---------- Damage ----------
@@ -226,7 +262,9 @@ public class PlayerController : MonoBehaviour
         if (collision.CompareTag("PickUp"))
         {
             monedas++;
-            contadorMonedas.text = "Monedas: " + monedas;
+            if (contadorMonedas != null)
+                contadorMonedas.text = "Monedas: " + monedas;
+
             Destroy(collision.gameObject);
         }
 
@@ -234,12 +272,14 @@ public class PlayerController : MonoBehaviour
             TakeDamage();
     }
 
-    void TakeDamage()
+    public void TakeDamage()
     {
         if (isDead) return;
 
         vidas--;
-        contadorVidas.text = "Vidas: " + vidas;
+        if (contadorVidas != null)
+            contadorVidas.text = "Vidas: " + vidas;
+
         anim.SetTrigger("Hurt");
 
         if (vidas <= 0) Die();
