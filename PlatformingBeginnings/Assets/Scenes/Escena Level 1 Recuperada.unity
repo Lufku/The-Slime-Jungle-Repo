@@ -1256,12 +1256,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 5
-  jumpForce: 0
-  isGrounded: 0
-  groundCheck: {fileID: 858215951}
+  jumpForce: 3
+  groundCheck: {fileID: 640840303}
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
+  groundRadius: 0.3
+  dashSpeed: 15
+  dashDuration: 0.2
+  attackCooldown: 0.5
   monedas: 0
   contadorMonedas: {fileID: 0}
   vidas: 3
@@ -2583,7 +2586,7 @@ GameObject:
   - component: {fileID: 1957078281}
   - component: {fileID: 1957078280}
   - component: {fileID: 1957078279}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Ground
   m_TagString: Ground
   m_Icon: {fileID: 0}

@@ -14,10 +14,16 @@ public class PlayerController : MonoBehaviour
     [Header("Jump")]
     public float jumpForce = 8f;
     private bool isGrounded;
-
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     public float groundRadius = 0.3f;
+
+    [Header("Dash")]
+    public float dashSpeed = 15f;
+    public float dashDuration = 0.2f;
+    private bool isDashing = false;
+    private float lastTapTime;
+    private float doubleTapDelay = 0.3f;
 
     [Header("Combat")]
     public float attackCooldown = 0.5f;
@@ -39,24 +45,28 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (isDead) return;
+        if (isDead || isDashing) return;
 
         CheckGround();
         Movement();
         Jump();
         Attack();
+        Crouch();
+        DetectDashInput();
         UpdateAnimations();
         cambioescena();
     }
 
+    // ---------- Ground ----------
     void CheckGround()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
     }
 
+    // ---------- Movement ----------
     void Movement()
     {
-        horizontalInput = Input.GetAxis("Horizontal");
+        horizontalInput = Input.GetAxisRaw("Horizontal");
         rb.linearVelocity = new Vector2(horizontalInput * speed, rb.linearVelocity.y);
 
         anim.SetBool("velocidad", horizontalInput != 0);
@@ -65,6 +75,7 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput < 0 && isFacingRight) Flip();
     }
 
+    // ---------- Jump ----------
     void Jump()
     {
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
@@ -75,6 +86,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // ---------- Attack ----------
     void Attack()
     {
         if (Input.GetKeyDown(KeyCode.Q) && canAttack && isGrounded)
@@ -87,18 +99,56 @@ public class PlayerController : MonoBehaviour
     {
         canAttack = false;
         anim.SetTrigger("Attack");
-
         yield return new WaitForSeconds(attackCooldown);
-
         canAttack = true;
     }
 
+    // ---------- Crouch ----------
+    void Crouch()
+    {
+        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+        anim.SetBool("crouch", crouchInput && isGrounded);
+    }
+
+    // ---------- Dash ----------
+    void DetectDashInput()
+    {
+        if (!isGrounded) return;
+
+        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow) ||
+            Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            if (Time.time - lastTapTime <= doubleTapDelay)
+            {
+                StartCoroutine(Dash());
+            }
+
+            lastTapTime = Time.time;
+        }
+    }
+
+    System.Collections.IEnumerator Dash()
+    {
+        isDashing = true;
+        anim.SetTrigger("Dash");
+
+        float direction = isFacingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(direction * dashSpeed, 0);
+
+        yield return new WaitForSeconds(dashDuration);
+
+        rb.linearVelocity = Vector2.zero;
+        isDashing = false;
+    }
+
+    // ---------- Animations ----------
     void UpdateAnimations()
     {
         anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
     }
 
+    // ---------- Utils ----------
     void Flip()
     {
         Vector3 scale = transform.localScale;
@@ -115,6 +165,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // ---------- Damage ----------
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("PickUp"))
@@ -136,7 +187,6 @@ public class PlayerController : MonoBehaviour
 
         vidas--;
         contadorVidas.text = "Vidas: " + vidas;
-
         anim.SetTrigger("Hurt");
 
         if (vidas <= 0)
@@ -147,17 +197,20 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
+        if (isDead) return;
+
         isDead = true;
         anim.SetTrigger("Death");
+
         rb.linearVelocity = Vector2.zero;
-        rb.bodyType = RigidbodyType2D.Static;
+        rb.simulated = false;
 
         Invoke(nameof(LoadDeathScene), 2f);
     }
 
     void LoadDeathScene()
     {
-        SceneManager.LoadScene("GameOver");
+        SceneManager.LoadScene("Scene2");
     }
 
     private void OnDrawGizmosSelected()
