@@ -25,6 +25,11 @@ public class PlayerController : MonoBehaviour
     private float lastTapTime;
     private float doubleTapDelay = 0.3f;
 
+    [Header("Dash Attack")]
+    public float dashAttackSpeed = 20f;
+    public float dashAttackDuration = 0.2f;
+    private bool isDashAttacking = false;
+
     [Header("Combat")]
     public float attackCooldown = 0.5f;
     private bool canAttack = true;
@@ -45,14 +50,15 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (isDead || isDashing) return;
+        if (isDead || isDashing || isDashAttacking) return;
 
         CheckGround();
+        DetectDashAttackInput(); // <-- Dash Attack
         Movement();
         Jump();
         Attack();
         Crouch();
-        DetectDashInput();
+        DetectDashInput();      // <-- Dash normal
         UpdateAnimations();
         cambioescena();
     }
@@ -89,7 +95,7 @@ public class PlayerController : MonoBehaviour
     // ---------- Attack ----------
     void Attack()
     {
-        if (Input.GetKeyDown(KeyCode.Q) && canAttack && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Q) && canAttack && isGrounded && !isDashAttacking)
         {
             StartCoroutine(AttackCoroutine());
         }
@@ -104,7 +110,6 @@ public class PlayerController : MonoBehaviour
     }
 
     // ---------- Crouch ----------
-    // ---------- Crouch ----------
     private bool wasCrouching = false;
 
     void Crouch()
@@ -115,17 +120,14 @@ public class PlayerController : MonoBehaviour
         {
             if (!wasCrouching)
             {
-                // Comenzamos crouch
                 anim.SetBool("isCrouching", true);
                 wasCrouching = true;
             }
-            // Mientras se mantiene presionado, la animación de hold se hace en loop automáticamente
         }
         else
         {
             if (wasCrouching)
             {
-                // Salimos de crouch
                 anim.SetTrigger("exitCrouch");
                 anim.SetBool("isCrouching", false);
                 wasCrouching = false;
@@ -133,11 +135,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     // ---------- Dash ----------
     void DetectDashInput()
     {
-        if (!isGrounded) return;
+        if (!isGrounded || isDashAttacking) return;
 
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow) ||
             Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
@@ -146,7 +147,6 @@ public class PlayerController : MonoBehaviour
             {
                 StartCoroutine(Dash());
             }
-
             lastTapTime = Time.time;
         }
     }
@@ -163,6 +163,33 @@ public class PlayerController : MonoBehaviour
 
         rb.linearVelocity = Vector2.zero;
         isDashing = false;
+    }
+
+    // ---------- Dash Attack ----------
+    void DetectDashAttackInput()
+    {
+        if (!isGrounded || isDashAttacking) return;
+
+        if (Input.GetKey(KeyCode.E))
+        {
+            StartCoroutine(DashAttack());
+        }
+    }
+
+    System.Collections.IEnumerator DashAttack()
+    {
+        isDashAttacking = true;
+        canAttack = false;
+        anim.SetTrigger("DashAttack");
+
+        float direction = isFacingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(direction * dashAttackSpeed, 0);
+
+        yield return new WaitForSeconds(dashAttackDuration);
+
+        rb.linearVelocity = Vector2.zero;
+        isDashAttacking = false;
+        canAttack = true;
     }
 
     // ---------- Animations ----------
