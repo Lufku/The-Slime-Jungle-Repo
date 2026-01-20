@@ -323,16 +323,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 5
   jumpForce: 5
-  isGrounded: 0
-  groundCheck: {fileID: 1088787705}
+  groundCheck: {fileID: 1088787706}
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
+  groundRadius: 0.3
+  attackCooldown: 0.5
   monedas: 0
   contadorMonedas: {fileID: 894606288}
   vidas: 3
   contadorVidas: {fileID: 832640741}
-  musicToPlay: 1
 --- !u!1 &92469629
 GameObject:
   m_ObjectHideFlags: 0

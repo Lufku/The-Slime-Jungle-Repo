@@ -307,11 +307,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 5
   jumpForce: 5
-  isGrounded: 0
   groundCheck: {fileID: 1130406845}
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
+  groundRadius: 0.25
+  attackCooldown: 0.5
   monedas: 0
   contadorMonedas: {fileID: 0}
   vidas: 3
@@ -342,7 +343,7 @@ GameObject:
   m_Component:
   - component: {fileID: 401375709}
   - component: {fileID: 401375708}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -872,9 +873,9 @@ GameObject:
   - component: {fileID: 1974285154}
   - component: {fileID: 1974285153}
   - component: {fileID: 1974285155}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
