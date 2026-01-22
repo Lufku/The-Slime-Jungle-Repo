@@ -47,6 +47,9 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorVidas;
 
+
+    public DarknessController darknessController;
+
     private bool wasCrouching = false;
 
     // ================= START =================
@@ -276,6 +279,11 @@ public class PlayerController : MonoBehaviour
         {
             monedas++;
             UpdateUI();
+
+            
+            if (darknessController != null)
+                darknessController.UpdateScreenIcon(monedas);
+
             Destroy(collision.gameObject);
         }
     }
@@ -286,4 +294,10 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
+
+
+
+
+
+
 }
