@@ -52,6 +52,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 5
   jumpForce: 5
+  maxJumps: 2
   groundCheck: {fileID: 7596563706289059442}
   groundLayer:
     serializedVersion: 2
@@ -64,9 +65,10 @@ MonoBehaviour:
   attackCooldown: 0.5
   attackHitbox: {fileID: 6483725996531014421}
   monedas: 0
-  contadorMonedas: {fileID: 0}
   vidas: 3
+  contadorMonedas: {fileID: 0}
   contadorVidas: {fileID: 0}
+  darknessController: {fileID: 0}
 --- !u!212 &5569523429791556173
 SpriteRenderer:
   m_ObjectHideFlags: 0

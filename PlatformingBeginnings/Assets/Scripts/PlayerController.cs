@@ -5,34 +5,45 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
+    // ================= MOVEMENT =================
     [Header("Movement")]
-    private Rigidbody2D rb;
-    private Animator anim;
-    private float horizontalInput;
     public float speed = 5f;
+    private float horizontalInput;
     private bool isFacingRight = true;
 
+    private Rigidbody2D rb;
+    private Animator anim;
+
+    // ================= CROUCH =================
+    [Header("Crouch")]
+    private bool isCrouching = false;
+
+    // ================= JUMP =================
     [Header("Jump")]
     public float jumpForce = 8f;
+    public int maxJumps = 2;
+    private int jumpCount;
     private bool isGrounded;
+
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     public float groundRadius = 0.3f;
-    private int maxJumps = 2;
-    private int jumpCount = 0;
 
+    // ================= DASH =================
     [Header("Dash")]
     public float dashSpeed = 15f;
     public float dashDuration = 0.2f;
-    private bool isDashing = false;
+    private bool isDashing;
     private float lastTapTime;
     private float doubleTapDelay = 0.3f;
 
+    // ================= DASH ATTACK =================
     [Header("Dash Attack")]
     public float dashAttackSpeed = 20f;
     public float dashAttackDuration = 0.2f;
-    private bool isDashAttacking = false;
+    private bool isDashAttacking;
 
+    // ================= COMBAT =================
     [Header("Combat")]
     public float attackCooldown = 0.5f;
     private bool canAttack = true;
@@ -41,13 +52,17 @@ public class PlayerController : MonoBehaviour
     [Header("Attack Hitbox")]
     public GameObject attackHitbox;
 
+    // ================= UI =================
     [Header("UI")]
     public int monedas = 0;
-    public TextMeshProUGUI contadorMonedas;
     public int vidas = 3;
+
+    public TextMeshProUGUI contadorMonedas;
     public TextMeshProUGUI contadorVidas;
 
-    private bool wasCrouching = false;
+    // ================= DARKNESS =================
+    [Header("Darkness")]
+    public DarknessController darknessController;
 
     // ================= START =================
     void Start()
@@ -67,8 +82,8 @@ public class PlayerController : MonoBehaviour
         if (isDead) return;
 
         CheckGround();
-        DetectDashAttackInput();
         DetectDashInput();
+        DetectDashAttackInput();
         Movement();
         Jump();
         Attack();
@@ -79,13 +94,39 @@ public class PlayerController : MonoBehaviour
     // ================= GROUND =================
     void CheckGround()
     {
-        bool wasGrounded = isGrounded;
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        isGrounded = Physics2D.OverlapCircle(
+            groundCheck.position,
+            groundRadius,
+            groundLayer
+        );
+
         anim.SetBool("isGrounded", isGrounded);
 
-        if (isGrounded && !wasGrounded)
+        if (isGrounded)
             jumpCount = 0;
     }
+
+    // ================= CROUCH =================º
+    void Crouch()
+    {
+        if (!isGrounded) return;
+
+        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+
+        if (crouchInput && !isCrouching)
+        {
+            isCrouching = true;
+            anim.SetBool("isCrouching", true);
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        }
+        else if (!crouchInput && isCrouching)
+        {
+            isCrouching = false;
+            anim.SetBool("isCrouching", false);
+            anim.SetTrigger("exitCrouch");
+        }
+    }
+
 
     // ================= MOVEMENT =================
     void Movement()
@@ -106,13 +147,14 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
             anim.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
             jumpCount++;
         }
     }
+
 
     // ================= ATTACK (CLICK IZQUIERDO) =================
     void Attack()
@@ -136,24 +178,6 @@ public class PlayerController : MonoBehaviour
         canAttack = true;
     }
 
-    // ================= CROUCH =================
-    void Crouch()
-    {
-        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
-
-        if (crouchInput && isGrounded)
-        {
-            anim.SetBool("isCrouching", true);
-            wasCrouching = true;
-        }
-        else if (wasCrouching)
-        {
-            anim.SetTrigger("exitCrouch");
-            anim.SetBool("isCrouching", false);
-            wasCrouching = false;
-        }
-    }
-
     // ================= DASH =================
     void DetectDashInput()
     {
@@ -173,8 +197,8 @@ public class PlayerController : MonoBehaviour
         isDashing = true;
         anim.SetTrigger("Dash");
 
-        float direction = isFacingRight ? 1 : -1;
-        rb.linearVelocity = new Vector2(direction * dashSpeed, 0);
+        float dir = isFacingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(dir * dashSpeed, 0);
 
         yield return new WaitForSeconds(dashDuration);
 
@@ -195,10 +219,11 @@ public class PlayerController : MonoBehaviour
     {
         isDashAttacking = true;
         canAttack = false;
+
         anim.SetTrigger("DashAttack");
 
-        float direction = isFacingRight ? 1 : -1;
-        rb.linearVelocity = new Vector2(direction * dashAttackSpeed, 0);
+        float dir = isFacingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(dir * dashAttackSpeed, 0);
 
         yield return new WaitForSeconds(0.05f);
         attackHitbox.SetActive(true);
@@ -209,6 +234,24 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = Vector2.zero;
         isDashAttacking = false;
         canAttack = true;
+    }
+
+    // ================= PICKUPS =================
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("PickUp"))
+        {
+            monedas++;
+            UpdateUI();
+
+            if (darknessController != null)
+                darknessController.UpdateScreenIcon(monedas);
+
+            Destroy(collision.gameObject);
+        }
+
+        if (collision.CompareTag("Pincho"))
+            TakeDamage();
     }
 
     // ================= DAMAGE =================
@@ -228,6 +271,7 @@ public class PlayerController : MonoBehaviour
     {
         isDead = true;
         anim.SetTrigger("Death");
+
         rb.linearVelocity = Vector2.zero;
         rb.simulated = false;
 
@@ -257,6 +301,7 @@ public class PlayerController : MonoBehaviour
     void Flip()
     {
         isFacingRight = !isFacingRight;
+
         Vector3 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
@@ -269,20 +314,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // ================= PICKUPS =================
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("PickUp"))
-        {
-            monedas++;
-            UpdateUI();
-            Destroy(collision.gameObject);
-        }
-    }
-
     private void OnDrawGizmosSelected()
     {
         if (groundCheck == null) return;
+
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }

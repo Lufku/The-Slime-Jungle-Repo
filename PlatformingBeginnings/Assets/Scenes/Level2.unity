@@ -476,9 +476,29 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1694020946124106982, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: bigScreen
+      value: 
+      objectReference: {fileID: 440475517}
+    - target: {fileID: -1694020946124106982, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: giantScreen
+      value: 
+      objectReference: {fileID: 1562290583}
+    - target: {fileID: -1694020946124106982, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: smallScreen
+      value: 
+      objectReference: {fileID: 1144568835}
+    - target: {fileID: -1694020946124106982, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: mediumScreen
+      value: 
+      objectReference: {fileID: 1847353967}
     - target: {fileID: 1137478493123110864, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 1137478493123110864, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: bigScreen
@@ -540,6 +560,10 @@ PrefabInstance:
       propertyPath: m_SortingOrder
       value: 274
       objectReference: {fileID: 0}
+    - target: {fileID: 6483725996531014421, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 7596563706289059442, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.28
@@ -547,6 +571,10 @@ PrefabInstance:
     - target: {fileID: 7596563706289059442, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: m_LocalPosition.y
       value: -0.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 9128136616578330580, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1247,7 +1275,7 @@ GameObject:
   m_Component:
   - component: {fileID: 440475518}
   - component: {fileID: 440475519}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pantalla negra grande_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2351,7 +2379,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1144568836}
   - component: {fileID: 1144568837}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: "pantalla negra peque\xF1a_0"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8871,7 +8899,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1562290584}
   - component: {fileID: 1562290585}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pantalla negra muy grande_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10955,7 +10983,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1847353968}
   - component: {fileID: 1847353969}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pantalla negra media_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
