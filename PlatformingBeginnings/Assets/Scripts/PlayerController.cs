@@ -269,6 +269,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // ================= PICKUPS =================
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("PickUp"))
+        {
+            monedas++;
+            UpdateUI();
+            Destroy(collision.gameObject);
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (groundCheck == null) return;
