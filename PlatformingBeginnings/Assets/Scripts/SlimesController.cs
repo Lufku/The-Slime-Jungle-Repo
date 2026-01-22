@@ -1,148 +1,278 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class SlimesController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
-    [Header("Stats")]
-    public int vida = 3;
-    public float speed = 2f;
-
-    [Header("Detection")]
-    public float detectionRange = 6f;
-    public float attackRange = 1.5f;
-
-    private Transform player;
+    [Header("Movement")]
     private Rigidbody2D rb;
     private Animator anim;
+    private float horizontalInput;
+    public float speed = 5f;
+    private bool isFacingRight = true;
 
+    [Header("Jump")]
+    public float jumpForce = 8f;
+    private bool isGrounded;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundLayer;
+    public float groundRadius = 0.3f;
+    private int maxJumps = 2;
+    private int jumpCount = 0;
+
+    [Header("Dash")]
+    public float dashSpeed = 15f;
+    public float dashDuration = 0.2f;
+    private bool isDashing = false;
+    private float lastTapTime;
+    private float doubleTapDelay = 0.3f;
+
+    [Header("Dash Attack")]
+    public float dashAttackSpeed = 20f;
+    public float dashAttackDuration = 0.2f;
+    private bool isDashAttacking = false;
+
+    [Header("Combat")]
+    public float attackCooldown = 0.5f;
+    private bool canAttack = true;
     private bool isDead = false;
-    private bool isAttacking = false;
-    private bool attackCooldown = false; // cooldown entre ataques
 
-    [Header("Knockback")]
-    public float knockbackForce = 10f;  // Aumentado
-    public float knockbackUpForce = 4f; // Aumentado
+    [Header("Attack Hitbox")]
+    public GameObject attackHitbox;
 
-    [Header("Attack")]
-    public float swallowDuration = 1f;   // duración de la animación
-    public float attackDelay = 2f;       // cooldown entre ataques en segundos
+    [Header("UI")]
+    public int monedas = 0;
+    public TextMeshProUGUI contadorMonedas;
+    public int vidas = 3;
+    public TextMeshProUGUI contadorVidas;
 
+    private bool wasCrouching = false;
+
+    // ================= START =================
     void Start()
     {
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
-
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+
+        UpdateUI();
     }
 
+    // ================= UPDATE =================
     void Update()
-    {
-        if (isDead || player == null) return;
-
-        float distance = Vector2.Distance(transform.position, player.position);
-
-        // Swallow si está cerca y no atacando y no en cooldown
-        if (distance <= attackRange && !isAttacking && !attackCooldown)
-            StartCoroutine(SwallowAttack());
-        // Moverse hacia el player si está en rango de detección
-        else if (distance <= detectionRange)
-            MoveTowardsPlayer();
-        else
-        {
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            anim.SetBool("Move", false);
-        }
-    }
-
-    void MoveTowardsPlayer()
-    {
-        anim.SetBool("Move", true);
-
-        Vector2 direction = (player.position - transform.position).normalized;
-        rb.linearVelocity = new Vector2(direction.x * speed, rb.linearVelocity.y);
-
-        // Girar sprite
-        transform.localScale = new Vector3(Mathf.Sign(direction.x), 1, 1);
-    }
-
-    IEnumerator SwallowAttack()
-    {
-        isAttacking = true;
-        attackCooldown = true;
-
-        anim.SetBool("Move", false);
-        anim.SetTrigger("Swallow");
-
-        rb.linearVelocity = Vector2.zero;
-
-        yield return new WaitForSeconds(swallowDuration);
-
-        isAttacking = false;
-
-        // Espera antes de poder atacar otra vez
-        yield return new WaitForSeconds(attackDelay);
-        attackCooldown = false;
-    }
-
-    // ---------- DAÑO AL PLAYER ----------
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (isDead || !isAttacking) return;
-
-        if (collision.CompareTag("Player"))
-        {
-            PlayerController playerScript = collision.transform.root.GetComponent<PlayerController>();
-            if (playerScript != null)
-                playerScript.TakeDamage();
-        }
-    }
-
-    // ---------- DAÑO AL SLIME ----------
-    public void TakeHit(Transform attacker)
     {
         if (isDead) return;
 
-        vida--;
-        anim.SetTrigger("Hit");
-
-        ApplyKnockback(attacker);
-
-        if (vida <= 0)
-            Die();
+        CheckGround();
+        DetectDashAttackInput();
+        DetectDashInput();
+        Movement();
+        Jump();
+        Attack();
+        Crouch();
+        UpdateAnimations();
     }
 
-    void ApplyKnockback(Transform attacker)
+    // ================= GROUND =================
+    void CheckGround()
     {
-        Vector2 direction = (transform.position - attacker.position).normalized;
+        bool wasGrounded = isGrounded;
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        anim.SetBool("isGrounded", isGrounded);
 
-        rb.linearVelocity = Vector2.zero;
-        rb.AddForce(new Vector2(direction.x * knockbackForce, knockbackUpForce), ForceMode2D.Impulse);
+        if (isGrounded && !wasGrounded)
+            jumpCount = 0;
+    }
+
+    // ================= MOVEMENT =================
+    void Movement()
+    {
+        if (isDashing || isDashAttacking) return;
+
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
+
+        anim.SetBool("velocidad", horizontalInput != 0);
+
+        if (horizontalInput > 0 && !isFacingRight) Flip();
+        if (horizontalInput < 0 && isFacingRight) Flip();
+    }
+
+    // ================= JUMP =================
+    void Jump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            anim.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
+            jumpCount++;
+        }
+    }
+
+    // ================= ATTACK (CLICK IZQUIERDO) =================
+    void Attack()
+    {
+        if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
+            StartCoroutine(AttackCoroutine());
+    }
+
+    IEnumerator AttackCoroutine()
+    {
+        canAttack = false;
+        anim.SetTrigger("Attack");
+
+        yield return new WaitForSeconds(0.1f);
+        attackHitbox.SetActive(true);
+
+        yield return new WaitForSeconds(0.2f);
+        attackHitbox.SetActive(false);
+
+        yield return new WaitForSeconds(attackCooldown);
+        canAttack = true;
+    }
+
+    // ================= CROUCH =================
+    void Crouch()
+    {
+        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+
+        if (crouchInput && isGrounded)
+        {
+            anim.SetBool("isCrouching", true);
+            wasCrouching = true;
+        }
+        else if (wasCrouching)
+        {
+            anim.SetTrigger("exitCrouch");
+            anim.SetBool("isCrouching", false);
+            wasCrouching = false;
+        }
+    }
+
+    // ================= DASH =================
+    void DetectDashInput()
+    {
+        if (!isGrounded || isDashAttacking) return;
+
+        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
+        {
+            if (Time.time - lastTapTime <= doubleTapDelay)
+                StartCoroutine(Dash());
+
+            lastTapTime = Time.time;
+        }
+    }
+
+    IEnumerator Dash()
+    {
+        isDashing = true;
+        anim.SetTrigger("Dash");
+
+        float direction = isFacingRight ? 1 : -1;
+        rb.velocity = new Vector2(direction * dashSpeed, 0);
+
+        yield return new WaitForSeconds(dashDuration);
+
+        rb.velocity = Vector2.zero;
+        isDashing = false;
+    }
+
+    // ================= DASH ATTACK (CLICK DERECHO) =================
+    void DetectDashAttackInput()
+    {
+        if (!isGrounded || isDashAttacking) return;
+
+        if (Input.GetMouseButtonDown(1))
+            StartCoroutine(DashAttack());
+    }
+
+    IEnumerator DashAttack()
+    {
+        isDashAttacking = true;
+        canAttack = false;
+        anim.SetTrigger("DashAttack");
+
+        float direction = isFacingRight ? 1 : -1;
+        rb.velocity = new Vector2(direction * dashAttackSpeed, 0);
+
+        yield return new WaitForSeconds(0.05f);
+        attackHitbox.SetActive(true);
+
+        yield return new WaitForSeconds(dashAttackDuration);
+        attackHitbox.SetActive(false);
+
+        rb.velocity = Vector2.zero;
+        isDashAttacking = false;
+        canAttack = true;
+    }
+
+    // ================= DAMAGE =================
+    public void TakeDamage()
+    {
+        if (isDead) return;
+
+        vidas--;
+        UpdateUI();
+        anim.SetTrigger("Hurt");
+
+        if (vidas <= 0)
+            Die();
     }
 
     void Die()
     {
         isDead = true;
         anim.SetTrigger("Death");
-
-        rb.linearVelocity = Vector2.zero;
+        rb.velocity = Vector2.zero;
         rb.simulated = false;
 
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
-            col.enabled = false;
-
-        Destroy(gameObject, 2f);
+        Invoke(nameof(LoadDeathScene), 2f);
     }
 
-    // ---------- GIZMOS ----------
+    void LoadDeathScene()
+    {
+        SceneManager.LoadScene("GameOver");
+    }
+
+    // ================= UTILS =================
+    void UpdateAnimations()
+    {
+        anim.SetFloat("verticalSpeed", rb.velocity.y);
+    }
+
+    void UpdateUI()
+    {
+        if (contadorVidas != null)
+            contadorVidas.text = "Vidas: " + vidas;
+
+        if (contadorMonedas != null)
+            contadorMonedas.text = "Monedas: " + monedas;
+    }
+
+    void Flip()
+    {
+        isFacingRight = !isFacingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+
+        if (attackHitbox != null)
+        {
+            Vector3 pos = attackHitbox.transform.localPosition;
+            pos.x *= -1;
+            attackHitbox.transform.localPosition = pos;
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        if (groundCheck == null) return;
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
 }

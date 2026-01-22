@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -46,62 +47,53 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorVidas;
 
-
-
     private bool wasCrouching = false;
-    private DarknessController darknessUI;
 
+    // ================= START =================
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        anim.SetBool("isGrounded", true);
-        darknessUI = FindObjectOfType<DarknessController>();
-        darknessUI?.UpdateScreenIcon(monedas);
-        // Desactivar hitbox si existe
+
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
 
-        // Inicializar UI seguro
-        if (contadorVidas != null)
-            contadorVidas.text = "Vidas: " + vidas;
-        if (contadorMonedas != null)
-            contadorMonedas.text = "Monedas: " + monedas;
+        UpdateUI();
     }
 
+    // ================= UPDATE =================
     void Update()
     {
         if (isDead) return;
 
         CheckGround();
         DetectDashAttackInput();
+        DetectDashInput();
         Movement();
         Jump();
         Attack();
         Crouch();
-        DetectDashInput();
         UpdateAnimations();
     }
 
-    // ---------- Ground ----------
+    // ================= GROUND =================
     void CheckGround()
     {
         bool wasGrounded = isGrounded;
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
-
         anim.SetBool("isGrounded", isGrounded);
 
         if (isGrounded && !wasGrounded)
             jumpCount = 0;
     }
 
-    // ---------- Movement ----------
+    // ================= MOVEMENT =================
     void Movement()
     {
         if (isDashing || isDashAttacking) return;
 
         horizontalInput = Input.GetAxisRaw("Horizontal");
-        rb.linearVelocity = new Vector2(horizontalInput * speed, rb.linearVelocity.y);
+        rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
 
         anim.SetBool("velocidad", horizontalInput != 0);
 
@@ -109,80 +101,65 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput < 0 && isFacingRight) Flip();
     }
 
-    // ---------- Jump ----------
+    // ================= JUMP =================
     void Jump()
     {
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
+            rb.velocity = new Vector2(rb.velocity.x, 0);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
-            if (jumpCount == 0)
-                anim.SetTrigger("Jump");
-            else
-                anim.SetTrigger("DoubleJump");
-
+            anim.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
             jumpCount++;
         }
     }
 
-    // ---------- Attack ----------
+    // ================= ATTACK (CLICK IZQUIERDO) =================
     void Attack()
     {
-        if (Input.GetKeyDown(KeyCode.Q) && canAttack && isGrounded && !isDashAttacking)
+        if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
             StartCoroutine(AttackCoroutine());
     }
 
-    System.Collections.IEnumerator AttackCoroutine()
+    IEnumerator AttackCoroutine()
     {
         canAttack = false;
         anim.SetTrigger("Attack");
 
         yield return new WaitForSeconds(0.1f);
-
-        if (attackHitbox != null)
-            attackHitbox.SetActive(true);
+        attackHitbox.SetActive(true);
 
         yield return new WaitForSeconds(0.2f);
-
-        if (attackHitbox != null)
-            attackHitbox.SetActive(false);
+        attackHitbox.SetActive(false);
 
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
     }
 
-    // ---------- Crouch ----------
+    // ================= CROUCH =================
     void Crouch()
     {
         bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
 
         if (crouchInput && isGrounded)
         {
-            if (!wasCrouching)
-            {
-                anim.SetBool("isCrouching", true);
-                wasCrouching = true;
-            }
+            anim.SetBool("isCrouching", true);
+            wasCrouching = true;
         }
-        else
+        else if (wasCrouching)
         {
-            if (wasCrouching)
-            {
-                anim.SetTrigger("exitCrouch");
-                anim.SetBool("isCrouching", false);
-                wasCrouching = false;
-            }
+            anim.SetTrigger("exitCrouch");
+            anim.SetBool("isCrouching", false);
+            wasCrouching = false;
         }
     }
 
-    // ---------- Dash ----------
+    // ================= DASH =================
     void DetectDashInput()
     {
         if (!isGrounded || isDashAttacking) return;
 
-        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow) ||
-            Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
         {
             if (Time.time - lastTapTime <= doubleTapDelay)
                 StartCoroutine(Dash());
@@ -191,113 +168,67 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    System.Collections.IEnumerator Dash()
+    IEnumerator Dash()
     {
         isDashing = true;
         anim.SetTrigger("Dash");
 
         float direction = isFacingRight ? 1 : -1;
-        rb.linearVelocity = new Vector2(direction * dashSpeed, 0);
+        rb.velocity = new Vector2(direction * dashSpeed, 0);
 
         yield return new WaitForSeconds(dashDuration);
 
-        rb.linearVelocity = Vector2.zero;
+        rb.velocity = Vector2.zero;
         isDashing = false;
     }
 
-    // ---------- Dash Attack ----------
+    // ================= DASH ATTACK (CLICK DERECHO) =================
     void DetectDashAttackInput()
     {
         if (!isGrounded || isDashAttacking) return;
 
-        if (Input.GetKey(KeyCode.E))
+        if (Input.GetMouseButtonDown(1))
             StartCoroutine(DashAttack());
     }
 
-    System.Collections.IEnumerator DashAttack()
+    IEnumerator DashAttack()
     {
         isDashAttacking = true;
         canAttack = false;
         anim.SetTrigger("DashAttack");
 
         float direction = isFacingRight ? 1 : -1;
-        rb.linearVelocity = new Vector2(direction * dashAttackSpeed, 0);
+        rb.velocity = new Vector2(direction * dashAttackSpeed, 0);
 
         yield return new WaitForSeconds(0.05f);
-
-        if (attackHitbox != null)
-            attackHitbox.SetActive(true);
+        attackHitbox.SetActive(true);
 
         yield return new WaitForSeconds(dashAttackDuration);
+        attackHitbox.SetActive(false);
 
-        if (attackHitbox != null)
-            attackHitbox.SetActive(false);
-
-        rb.linearVelocity = Vector2.zero;
+        rb.velocity = Vector2.zero;
         isDashAttacking = false;
         canAttack = true;
     }
 
-    // ---------- Utils ----------
-    void UpdateAnimations()
-    {
-        anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
-    }
-
-    void Flip()
-    {
-        Vector3 scale = transform.localScale;
-        scale.x *= -1;
-        transform.localScale = scale;
-        isFacingRight = !isFacingRight;
-
-        // Flip hitbox
-        if (attackHitbox != null)
-        {
-            Vector3 pos = attackHitbox.transform.localPosition;
-            pos.x *= -1;
-            attackHitbox.transform.localPosition = pos;
-        }
-    }
-
-    // ---------- Damage ----------
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("PickUp"))
-        {
-            monedas++;
-            if (contadorMonedas != null)
-                contadorMonedas.text = "Monedas: " + monedas;
-
-            Destroy(collision.gameObject);
-            darknessUI?.UpdateScreenIcon(monedas);
-        }
-
-        if (collision.CompareTag("Pincho"))
-            TakeDamage();
-    }
-
+    // ================= DAMAGE =================
     public void TakeDamage()
     {
         if (isDead) return;
 
         vidas--;
-        if (contadorVidas != null)
-            contadorVidas.text = "Vidas: " + vidas;
-
+        UpdateUI();
         anim.SetTrigger("Hurt");
 
-        if (vidas <= 0) Die();
+        if (vidas <= 0)
+            Die();
     }
 
     void Die()
     {
-        if (isDead) return;
-
         isDead = true;
         anim.SetTrigger("Death");
-
-        rb.linearVelocity = Vector2.zero;
+        rb.velocity = Vector2.zero;
         rb.simulated = false;
 
         Invoke(nameof(LoadDeathScene), 2f);
@@ -308,11 +239,40 @@ public class PlayerController : MonoBehaviour
         SceneManager.LoadScene("GameOver");
     }
 
+    // ================= UTILS =================
+    void UpdateAnimations()
+    {
+        anim.SetFloat("verticalSpeed", rb.velocity.y);
+    }
+
+    void UpdateUI()
+    {
+        if (contadorVidas != null)
+            contadorVidas.text = "Vidas: " + vidas;
+
+        if (contadorMonedas != null)
+            contadorMonedas.text = "Monedas: " + monedas;
+    }
+
+    void Flip()
+    {
+        isFacingRight = !isFacingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+
+        if (attackHitbox != null)
+        {
+            Vector3 pos = attackHitbox.transform.localPosition;
+            pos.x *= -1;
+            attackHitbox.transform.localPosition = pos;
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (groundCheck == null) return;
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
-    
 }
