@@ -40,8 +40,11 @@ public class DarknessController : MonoBehaviour
             mediumScreen?.SetActive(true);
         else if (monedas == 2)
             bigScreen?.SetActive(true);
-        else // 3 o más monedas
+        else if (monedas == 3)
             giantScreen?.SetActive(true);
+
+       // else // 4 o más monedas
+         //   CleanScreen?.SetActive(true);
     }
 
     /// <summary>
