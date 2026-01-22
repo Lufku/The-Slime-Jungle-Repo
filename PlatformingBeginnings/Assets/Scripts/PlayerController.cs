@@ -56,7 +56,6 @@ public class PlayerController : MonoBehaviour
     [Header("UI")]
     public int monedas = 0;
     public int vidas = 3;
-
     public TextMeshProUGUI contadorMonedas;
     public TextMeshProUGUI contadorVidas;
 
@@ -74,6 +73,10 @@ public class PlayerController : MonoBehaviour
             attackHitbox.SetActive(false);
 
         UpdateUI();
+
+        // Activar pantalla inicial segï¿½n monedas
+        if (darknessController != null)
+            darknessController.UpdateScreenIcon(monedas);
     }
 
     // ================= UPDATE =================
@@ -86,47 +89,20 @@ public class PlayerController : MonoBehaviour
         DetectDashAttackInput();
         Movement();
         Jump();
-        Attack();
         Crouch();
+        Attack();
         UpdateAnimations();
     }
 
     // ================= GROUND =================
     void CheckGround()
     {
-        isGrounded = Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundRadius,
-            groundLayer
-        );
-
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
         anim.SetBool("isGrounded", isGrounded);
 
         if (isGrounded)
-            jumpCount = 0;
+            jumpCount = 0; // Reset de saltos al tocar el suelo
     }
-
-    // ================= CROUCH =================º
-    void Crouch()
-    {
-        if (!isGrounded) return;
-
-        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
-
-        if (crouchInput && !isCrouching)
-        {
-            isCrouching = true;
-            anim.SetBool("isCrouching", true);
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        }
-        else if (!crouchInput && isCrouching)
-        {
-            isCrouching = false;
-            anim.SetBool("isCrouching", false);
-            anim.SetTrigger("exitCrouch");
-        }
-    }
-
 
     // ================= MOVEMENT =================
     void Movement()
@@ -142,6 +118,27 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput < 0 && isFacingRight) Flip();
     }
 
+    // ================= CROUCH =================
+    void Crouch()
+    {
+        if (!isGrounded) return;
+
+        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+
+        if (crouchInput && !isCrouching)
+        {
+            isCrouching = true;
+            anim.SetBool("isCrouching", true);
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y); // Parar horizontalmente al agacharse
+        }
+        else if (!crouchInput && isCrouching)
+        {
+            isCrouching = false;
+            anim.SetBool("isCrouching", false);
+            anim.SetTrigger("exitCrouch");
+        }
+    }
+
     // ================= JUMP =================
     void Jump()
     {
@@ -155,11 +152,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     // ================= ATTACK (CLICK IZQUIERDO) =================
     void Attack()
     {
-        if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
+        if (Input.GetMouseButtonDown(0) && canAttack && !isDashAttacking)
             StartCoroutine(AttackCoroutine());
     }
 
@@ -169,10 +165,10 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("Attack");
 
         yield return new WaitForSeconds(0.1f);
-        attackHitbox.SetActive(true);
+        if (attackHitbox != null) attackHitbox.SetActive(true);
 
         yield return new WaitForSeconds(0.2f);
-        attackHitbox.SetActive(false);
+        if (attackHitbox != null) attackHitbox.SetActive(false);
 
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
@@ -202,7 +198,7 @@ public class PlayerController : MonoBehaviour
 
         yield return new WaitForSeconds(dashDuration);
 
-        rb.linearVelocity = Vector2.zero;
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         isDashing = false;
     }
 
@@ -226,12 +222,12 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(dir * dashAttackSpeed, 0);
 
         yield return new WaitForSeconds(0.05f);
-        attackHitbox.SetActive(true);
+        if (attackHitbox != null) attackHitbox.SetActive(true);
 
         yield return new WaitForSeconds(dashAttackDuration);
-        attackHitbox.SetActive(false);
+        if (attackHitbox != null) attackHitbox.SetActive(false);
 
-        rb.linearVelocity = Vector2.zero;
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         isDashAttacking = false;
         canAttack = true;
     }
