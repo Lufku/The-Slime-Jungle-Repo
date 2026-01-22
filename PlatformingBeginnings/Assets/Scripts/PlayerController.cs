@@ -46,14 +46,18 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorVidas;
 
+
+
     private bool wasCrouching = false;
+    private DarknessController darknessUI;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         anim.SetBool("isGrounded", true);
-
+        darknessUI = FindObjectOfType<DarknessController>();
+        darknessUI?.UpdateScreenIcon(monedas);
         // Desactivar hitbox si existe
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
@@ -266,6 +270,7 @@ public class PlayerController : MonoBehaviour
                 contadorMonedas.text = "Monedas: " + monedas;
 
             Destroy(collision.gameObject);
+            darknessUI?.UpdateScreenIcon(monedas);
         }
 
         if (collision.CompareTag("Pincho"))
@@ -309,4 +314,5 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
+    
 }
