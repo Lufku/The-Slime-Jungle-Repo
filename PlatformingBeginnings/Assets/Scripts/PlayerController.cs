@@ -93,7 +93,7 @@ public class PlayerController : MonoBehaviour
         if (isDashing || isDashAttacking) return;
 
         horizontalInput = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(horizontalInput * speed, rb.linearVelocity.y);
 
         anim.SetBool("velocidad", horizontalInput != 0);
 
@@ -106,7 +106,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
         {
-            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
             anim.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
@@ -174,11 +174,11 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("Dash");
 
         float direction = isFacingRight ? 1 : -1;
-        rb.velocity = new Vector2(direction * dashSpeed, 0);
+        rb.linearVelocity = new Vector2(direction * dashSpeed, 0);
 
         yield return new WaitForSeconds(dashDuration);
 
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         isDashing = false;
     }
 
@@ -198,7 +198,7 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("DashAttack");
 
         float direction = isFacingRight ? 1 : -1;
-        rb.velocity = new Vector2(direction * dashAttackSpeed, 0);
+        rb.linearVelocity = new Vector2(direction * dashAttackSpeed, 0);
 
         yield return new WaitForSeconds(0.05f);
         attackHitbox.SetActive(true);
@@ -206,7 +206,7 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(dashAttackDuration);
         attackHitbox.SetActive(false);
 
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         isDashAttacking = false;
         canAttack = true;
     }
@@ -228,7 +228,7 @@ public class PlayerController : MonoBehaviour
     {
         isDead = true;
         anim.SetTrigger("Death");
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         rb.simulated = false;
 
         Invoke(nameof(LoadDeathScene), 2f);
@@ -242,7 +242,7 @@ public class PlayerController : MonoBehaviour
     // ================= UTILS =================
     void UpdateAnimations()
     {
-        anim.SetFloat("verticalSpeed", rb.velocity.y);
+        anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
     }
 
     void UpdateUI()
