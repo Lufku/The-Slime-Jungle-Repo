@@ -1,9 +1,9 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 
 public class MovingPlatform : MonoBehaviour
 {
 	[SerializeField] float speed;              // Velocidad de la plataforma
-	[SerializeField] int startingPoint;        // Õndice inicial
+	[SerializeField] int startingPoint;        // √çndice inicial
 	[SerializeField] Transform[] points;       // Puntos de destino
 
 	private int i;
@@ -17,7 +17,7 @@ public class MovingPlatform : MonoBehaviour
 
 	void Update()
 	{
-		// Si est· cerca del punto actual
+		// Si est√° cerca del punto actual
 		if (Vector2.Distance(transform.position, points[i].position) < 0.02f)
 		{
 			i++; // Siguiente punto

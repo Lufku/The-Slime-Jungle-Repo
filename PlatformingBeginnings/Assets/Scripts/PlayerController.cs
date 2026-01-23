@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     public int maxJumps = 2;
     private int jumpCount;
     private bool isGrounded;
+    private bool wasGroundedLastFrame = false;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
@@ -73,10 +74,6 @@ public class PlayerController : MonoBehaviour
             attackHitbox.SetActive(false);
 
         UpdateUI();
-
-        // Activar pantalla inicial seg�n monedas
-        if (darknessController != null)
-            darknessController.UpdateScreenIcon(monedas);
     }
 
     // ================= UPDATE =================
@@ -89,19 +86,68 @@ public class PlayerController : MonoBehaviour
         DetectDashAttackInput();
         Movement();
         Jump();
-        Crouch();
         Attack();
+        Crouch();
         UpdateAnimations();
     }
 
     // ================= GROUND =================
     void CheckGround()
     {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
-        anim.SetBool("isGrounded", isGrounded);
+        // Detectar si estamos tocando el suelo
+        bool groundedNow = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        anim.SetBool("isGrounded", groundedNow);
 
-        if (isGrounded)
-            jumpCount = 0; // Reset de saltos al tocar el suelo
+        // Solo reinicia jumpCount si antes no est�bamos en el suelo y ahora s�
+        if (!isGrounded && groundedNow)
+        {
+            jumpCount = 0;
+        }
+
+        isGrounded = groundedNow;
+    }
+
+    // ================= JUMP =================
+    void Jump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
+        {
+            // Reinicia velocidad vertical antes del salto
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+
+            // Aplica fuerza de salto
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            // Animaciones seg�n salto
+            if (jumpCount == 0)
+                anim.SetTrigger("Jump");        // Primer salto
+            else
+                anim.SetTrigger("DoubleJump");  // Segundo salto o m�s, seg�n maxJumps
+
+            jumpCount++;
+        }
+    }
+
+
+    // ================= CROUCH =================
+    void Crouch()
+    {
+        if (!isGrounded) return;
+
+        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+
+        if (crouchInput && !isCrouching)
+        {
+            isCrouching = true;
+            anim.SetBool("isCrouching", true);
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        }
+        else if (!crouchInput && isCrouching)
+        {
+            isCrouching = false;
+            anim.SetBool("isCrouching", false);
+            anim.SetTrigger("exitCrouch");
+        }
     }
 
     // ================= MOVEMENT =================
@@ -118,44 +164,10 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput < 0 && isFacingRight) Flip();
     }
 
-    // ================= CROUCH =================
-    void Crouch()
-    {
-        if (!isGrounded) return;
-
-        bool crouchInput = Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
-
-        if (crouchInput && !isCrouching)
-        {
-            isCrouching = true;
-            anim.SetBool("isCrouching", true);
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y); // Parar horizontalmente al agacharse
-        }
-        else if (!crouchInput && isCrouching)
-        {
-            isCrouching = false;
-            anim.SetBool("isCrouching", false);
-            anim.SetTrigger("exitCrouch");
-        }
-    }
-
-    // ================= JUMP =================
-    void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-            anim.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
-            jumpCount++;
-        }
-    }
-
-    // ================= ATTACK (CLICK IZQUIERDO) =================
+    // ================= ATTACK =================
     void Attack()
     {
-        if (Input.GetMouseButtonDown(0) && canAttack && !isDashAttacking)
+        if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
             StartCoroutine(AttackCoroutine());
     }
 
@@ -165,10 +177,10 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("Attack");
 
         yield return new WaitForSeconds(0.1f);
-        if (attackHitbox != null) attackHitbox.SetActive(true);
+        attackHitbox.SetActive(true);
 
         yield return new WaitForSeconds(0.2f);
-        if (attackHitbox != null) attackHitbox.SetActive(false);
+        attackHitbox.SetActive(false);
 
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
@@ -198,11 +210,11 @@ public class PlayerController : MonoBehaviour
 
         yield return new WaitForSeconds(dashDuration);
 
-        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        rb.linearVelocity = Vector2.zero;
         isDashing = false;
     }
 
-    // ================= DASH ATTACK (CLICK DERECHO) =================
+    // ================= DASH ATTACK =================
     void DetectDashAttackInput()
     {
         if (!isGrounded || isDashAttacking) return;
@@ -222,12 +234,12 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(dir * dashAttackSpeed, 0);
 
         yield return new WaitForSeconds(0.05f);
-        if (attackHitbox != null) attackHitbox.SetActive(true);
+        attackHitbox.SetActive(true);
 
         yield return new WaitForSeconds(dashAttackDuration);
-        if (attackHitbox != null) attackHitbox.SetActive(false);
+        attackHitbox.SetActive(false);
 
-        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        rb.linearVelocity = Vector2.zero;
         isDashAttacking = false;
         canAttack = true;
     }
