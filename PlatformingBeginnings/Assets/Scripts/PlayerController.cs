@@ -64,6 +64,22 @@ public class PlayerController : MonoBehaviour
     [Header("Darkness")]
     public DarknessController darknessController;
 
+    // ================= AUDIO =================
+    [Header("Audio")]
+    public AudioClip coinSound;
+    public AudioClip attackSound;
+    public AudioClip dashSound;
+    public AudioClip jumpSound;
+    public AudioClip damageSound;
+    public AudioClip deathSound;
+    public AudioClip doorSound;
+    public AudioClip keySound;
+    public AudioClip pickUpSound;
+    private AudioSource audioSource;
+
+    [Header("Key")]
+    public KeyController key;
+
     // ================= START =================
     void Start()
     {
@@ -72,7 +88,7 @@ public class PlayerController : MonoBehaviour
 
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
-
+        audioSource = GetComponent<AudioSource>();
         UpdateUI();
     }
 
@@ -89,6 +105,7 @@ public class PlayerController : MonoBehaviour
         Attack();
         Crouch();
         UpdateAnimations();
+        CheckCoins();
     }
 
     // ================= GROUND =================
@@ -112,6 +129,9 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
         {
+            // JUMP SFX
+            if (jumpSound != null && audioSource != null)
+                audioSource.PlayOneShot(jumpSound);
             // Reinicia velocidad vertical antes del salto
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
 
@@ -168,7 +188,11 @@ public class PlayerController : MonoBehaviour
     void Attack()
     {
         if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
+        {
             StartCoroutine(AttackCoroutine());
+            if (attackSound != null && audioSource != null)
+                audioSource.PlayOneShot(attackSound);
+        }
     }
 
     IEnumerator AttackCoroutine()
@@ -202,6 +226,8 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator Dash()
     {
+        if (dashSound != null && audioSource != null)
+            audioSource.PlayOneShot(dashSound);
         isDashing = true;
         anim.SetTrigger("Dash");
 
@@ -249,8 +275,11 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.CompareTag("PickUp"))
         {
+            if (coinSound != null && audioSource != null)
+            audioSource.PlayOneShot(coinSound);
             monedas++;
             UpdateUI();
+
 
             if (darknessController != null)
                 darknessController.UpdateScreenIcon(monedas);
@@ -266,7 +295,9 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage()
     {
         if (isDead) return;
-
+        // DAMAGE SFX
+        if (damageSound != null && audioSource != null)
+            audioSource.PlayOneShot(damageSound);
         vidas--;
         UpdateUI();
         anim.SetTrigger("Hurt");
@@ -277,6 +308,9 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
+        // DEATH SFX
+        if (deathSound != null && audioSource != null)
+            audioSource.PlayOneShot(deathSound);
         isDead = true;
         anim.SetTrigger("Death");
 
@@ -320,6 +354,10 @@ public class PlayerController : MonoBehaviour
             pos.x *= -1;
             attackHitbox.transform.localPosition = pos;
         }
+    }
+    void CheckCoins()
+    {
+        key.CheckCoins(monedas);
     }
 
     private void OnDrawGizmosSelected()

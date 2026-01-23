@@ -27,6 +27,10 @@ public class SlimesController : MonoBehaviour
     public float swallowDuration = 1f;   // duración de la animación
     public float attackDelay = 2f;       // cooldown entre ataques en segundos
 
+    [Header("Audio")]
+    private AudioSource audioSource;
+    public AudioClip killSound;
+
     void Start()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -35,6 +39,7 @@ public class SlimesController : MonoBehaviour
 
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -103,7 +108,9 @@ public class SlimesController : MonoBehaviour
     public void TakeHit(Transform attacker)
     {
         if (isDead) return;
-
+        // DAMAGE SFX
+        if (killSound != null && audioSource != null)
+            audioSource.PlayOneShot(killSound);
         vida--;
         anim.SetTrigger("Hit");
 
