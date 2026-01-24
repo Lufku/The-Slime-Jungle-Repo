@@ -42,7 +42,7 @@ public class CambioNivelCon3Puntos : MonoBehaviour
 			if (indice >= puntos.Length)
 			{
 				moviendo = false;
-				SceneManager.LoadScene("Level3");
+				SceneManager.LoadScene("FinalLevel");
 			}
 		}
 	}
