@@ -15751,7 +15751,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b7a7232fd803e947bf87f6cc1dc819a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KeyController
-  coinsNeeded: 1
+  coinsNeeded: 10
   isVisible: 0
 --- !u!212 &1969055289
 SpriteRenderer:
