@@ -10,7 +10,7 @@ public class StartMenu : MonoBehaviour
 
 	public void PlayGame()
 	{
-		SceneManager.LoadScene("Escena Level 1 Recuperada");
+		SceneManager.LoadScene("Map");
 	}
 
 	public void Controls()
