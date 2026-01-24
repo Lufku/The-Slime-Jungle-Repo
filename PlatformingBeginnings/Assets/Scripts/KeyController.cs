@@ -3,31 +3,37 @@ using UnityEngine;
 public class KeyController : MonoBehaviour
 {
     private Rigidbody2D rb;
+    private SpriteRenderer spriteRenderer;
     public int coinsNeeded = 4;
+    public bool isVisible = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 0f; // No gravity at start
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        rb.gravityScale = 0f;
+        spriteRenderer.enabled = false;
     }
 
     public void CheckCoins(int currentCoins)
     {
-        if (currentCoins >= coinsNeeded)
+        if (!isVisible && currentCoins >= coinsNeeded)
         {
-            ActivateGravity();
+            ShowKey();
         }
     }
 
-    void ActivateGravity()
+    void ShowKey()
     {
-        rb.gravityScale = 1f;
+        spriteRenderer.enabled = true;
+        isVisible = true;
     }
-    private void OnCollisionEnter2D(Collision2D collision)
+    public void HideKey()
     {
-        if (collision.gameObject.CompareTag("Ground")) // asegúrate que tu suelo tiene tag "Ground"
+        if (isVisible)
         {
-            rb.gravityScale = 0f;
+            isVisible = false;
         }
     }
-}
+
+    }

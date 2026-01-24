@@ -57,6 +57,7 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorMonedas;
     public TextMeshProUGUI contadorVidas;
+    public TextMeshProUGUI textoTemporal;
 
     // ================= DARKNESS =================
     [Header("Darkness")]
@@ -73,11 +74,16 @@ public class PlayerController : MonoBehaviour
     public AudioClip doorSound;
     public AudioClip keySound;
     public AudioClip pickUpSound;
+    public AudioClip unlockSound;
     private AudioSource audioSource;
 
     [Header("Key")]
     public KeyController key;
+    public bool keyCollected = false;
+    private bool keyAppeared = false;
 
+    [Header("Door")]
+    public DoorController doorController;
 
     [Header("Combat Stats")]
     public int extraDamage = 0;
@@ -332,7 +338,31 @@ public class PlayerController : MonoBehaviour
         }
 
         if (collision.CompareTag("Pincho"))
+        {
             TakeDamage();
+        }
+        if (collision.CompareTag("Key") && key.isVisible)
+        {
+            ShowText("You can now unlock the door.");
+            keyCollected = true;
+            Destroy(collision.gameObject);
+            if (pickUpSound != null && audioSource != null)
+                audioSource.PlayOneShot(pickUpSound);
+        }
+        if (collision.CompareTag("Door_closed"))
+        {
+            if (!keyCollected)
+            {
+                ShowText("You must collect 10 coins to summon the key.");
+            }
+            else
+            {
+                doorController.OpenDoor();
+                if (unlockSound != null && audioSource != null) ;
+                audioSource.PlayOneShot(unlockSound);
+            }
+
+        }
     }
 
     // ================= DAMAGE =================
@@ -404,6 +434,13 @@ public class PlayerController : MonoBehaviour
     void CheckCoins()
     {
         key.CheckCoins(monedas);
+        if (!keyAppeared && key.isVisible && keySound != null && audioSource != null)
+        {
+            keyAppeared = true;
+            ShowText("The key has been summoned.");
+            audioSource.PlayOneShot(keySound);
+        }
+
     }
 
     private void OnDrawGizmosSelected()
@@ -412,5 +449,15 @@ public class PlayerController : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
+    }
+    private void ShowText(string mensaje)
+    {
+        textoTemporal.text = mensaje;
+        Invoke("HideText", 5f);
+    }
+
+    void HideText()
+    {
+        textoTemporal.text = "";
     }
 }

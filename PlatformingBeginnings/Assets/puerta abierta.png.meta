@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ecba57423327fb9438a5635ea53269ca
+guid: 73ffcd27788b72e43a04f694c0c17272
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1024908213032023908
-    second: pantalla negra grande_0
+      213: -7998254468537737729
+    second: puerta abierta_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pantalla negra grande_0
+      name: puerta abierta_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 16113
-        height: 10254
+        width: 696
+        height: 526
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 467772de694393e00800000000000000
-      internalID: 1024908213032023908
+      spriteID: ffd90abffed700190800000000000000
+      internalID: -7998254468537737729
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pantalla negra grande_0: 1024908213032023908
+      puerta abierta_0: -7998254468537737729
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

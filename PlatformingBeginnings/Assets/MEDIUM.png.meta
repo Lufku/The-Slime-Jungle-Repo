@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 825e2b70ca43c7f42bf28542738f594f
+guid: efcfeb13051fb0e4bb1be620828c8962
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7056957962856152292
-    second: pantalla negra media_0
+      213: -3822419796699081649
+    second: MEDIUM_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pantalla negra media_0
+      name: MEDIUM_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 16113
-        height: 10254
+        width: 8526
+        height: 5999
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c1348154f16a01e90800000000000000
-      internalID: -7056957962856152292
+      spriteID: f44945b627904fac0800000000000000
+      internalID: -3822419796699081649
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pantalla negra media_0: -7056957962856152292
+      MEDIUM_0: -3822419796699081649
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
