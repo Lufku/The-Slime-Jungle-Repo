@@ -33,27 +33,36 @@ public class CambioDeNiveles : MonoBehaviour
 
 	void Update()
 	{
+		// Si ya terminó el recorrido, NO mover más
 		if (sceneLoaded) return;
 
-		// Si llega al punto actual
-		if (Vector3.Distance(transform.position, points[i].position) < 0.02f)
+		// Si ya no hay más puntos
+		if (i >= points.Length)
 		{
-			i++;
-
-			// Si llega al último punto → cambiar escena
-			if (i >= points.Length)
-			{
-				sceneLoaded = true;
-				SceneManager.LoadScene("Escena Level 1 Recuperada");
-				return;
-			}
+			sceneLoaded = true;
+			return;
 		}
 
-		// Movimiento del icono del jugador
+		// Mover hacia el punto actual
 		transform.position = Vector3.MoveTowards(
 			transform.position,
 			points[i].position,
 			speed * Time.deltaTime
 		);
+
+		// ¿Ha llegado al punto?
+		if (Vector3.Distance(transform.position, points[i].position) < 0.05f)
+		{
+			i++;
+
+			// Si este era el último punto → parar y cambiar escena
+			if (i >= points.Length)
+			{
+				sceneLoaded = true;
+				SceneManager.LoadScene("Escena Level 1 Recuperada");
+			}
+		}
 	}
+
+
 }
