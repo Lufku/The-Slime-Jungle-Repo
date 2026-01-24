@@ -23,7 +23,6 @@ public class PlayerController : MonoBehaviour
     public float jumpForce = 8f;
     private int jumpCount = 0; // 0 = en suelo, 1 = primer salto, 2 = doble salto
     private bool isGrounded;
-    private bool wasGroundedLastFrame = false;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
@@ -78,6 +77,10 @@ public class PlayerController : MonoBehaviour
 
     [Header("Key")]
     public KeyController key;
+
+
+    [Header("Combat Stats")]
+    public int extraDamage = 0;
 
     // ================= START =================
     void Start()
@@ -282,7 +285,7 @@ public class PlayerController : MonoBehaviour
     IEnumerator DashAttack()
     {
         isDashAttacking = true;
-        isDashing = false; // IMPORTANTE: cancelar cualquier dash activo
+        isDashing = false;
         canAttack = false;
 
         anim.SetTrigger("DashAttack");
@@ -290,20 +293,25 @@ public class PlayerController : MonoBehaviour
         float dir = isFacingRight ? 1 : -1;
         rb.linearVelocity = new Vector2(dir * dashAttackSpeed, 0);
 
-        yield return new WaitForSeconds(0.05f);
+        // Espera un poco para sincronizar con la animación
+        yield return new WaitForSeconds(0.1f);
+
+        // Activar hitbox igual que el ataque normal
         attackHitbox.SetActive(true);
 
-        yield return new WaitForSeconds(dashAttackDuration);
+        // Mantener hitbox activo durante el ataque
+        yield return new WaitForSeconds(0.2f);
+
         attackHitbox.SetActive(false);
 
+        // Termina el dash attack
         rb.linearVelocity = Vector2.zero;
-
         isDashAttacking = false;
         canAttack = true;
 
-        // IMPORTANTE: evitar que el dash se active justo al terminar el dash attack
         lastTapTime = 0;
     }
+
 
 
     // ================= PICKUPS =================
