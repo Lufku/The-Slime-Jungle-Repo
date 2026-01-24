@@ -133,7 +133,7 @@ public class SlimesController : MonoBehaviour
     {
         if (isDead) return;
 
-        if (killSound != null && audioSource != null)
+        if (killSound != null)
             audioSource.PlayOneShot(killSound);
 
         int dmg = 1;
@@ -161,6 +161,8 @@ public class SlimesController : MonoBehaviour
 
     void Die()
     {
+        Debug.Log("SLIME MUERTO");
+
         isDead = true;
         anim.SetTrigger("Death");
 
@@ -173,24 +175,28 @@ public class SlimesController : MonoBehaviour
 
         GivePowerUpToPlayer();
 
+        FindObjectOfType<HUDController>().SumarSlime();
+
         Destroy(gameObject, 2f);
     }
 
     void GivePowerUpToPlayer()
     {
-        if (player == null) return;
+        Debug.Log("DANDO POWERUP AL PLAYER");
+
+        if (player == null)
+        {
+            Debug.Log("PLAYER ES NULL");
+            return;
+        }
 
         PlayerPowerUps power = player.GetComponent<PlayerPowerUps>();
-        if (power != null)
-            power.GiveRandomPowerUp();
-    }
+        if (power == null)
+        {
+            Debug.Log("PLAYER NO TIENE PlayerPowerUps");
+            return;
+        }
 
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, baseDetectionRange * slimeSize);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, baseAttackRange * slimeSize);
+        power.GiveRandomPowerUp();
     }
 }

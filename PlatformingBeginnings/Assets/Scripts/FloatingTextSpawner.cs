@@ -8,8 +8,10 @@ public class FloatingTextSpawner : MonoBehaviour
     {
         if (floatingTextPrefab == null) return;
 
-        GameObject obj = Instantiate(floatingTextPrefab, transform.position + Vector3.up * 1.5f, Quaternion.identity);
-        FloatingText ft = obj.GetComponent<FloatingText>();
-        ft.SetText(message, color);
+        GameObject obj = Instantiate(floatingTextPrefab, transform.position, Quaternion.identity);
+
+        FloatingText ft = obj.GetComponentInChildren<FloatingText>();
+        if (ft != null)
+            ft.SetText(message, color);
     }
 }

@@ -5,7 +5,6 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
-    // ================= MOVEMENT =================
     [Header("Movement")]
     public float speed = 5f;
     private float horizontalInput;
@@ -14,21 +13,18 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
 
-    // ================= CROUCH =================
     [Header("Crouch")]
     private bool isCrouching = false;
 
-    // ================= JUMP =================
     [Header("Jump")]
     public float jumpForce = 8f;
-    private int jumpCount = 0; // 0 = en suelo, 1 = primer salto, 2 = doble salto
+    private int jumpCount = 0;
     private bool isGrounded;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     public float groundRadius = 0.3f;
 
-    // ================= DASH =================
     [Header("Dash")]
     public float dashSpeed = 15f;
     public float dashDuration = 0.2f;
@@ -36,13 +32,11 @@ public class PlayerController : MonoBehaviour
     private float lastTapTime;
     private float doubleTapDelay = 0.3f;
 
-    // ================= DASH ATTACK =================
     [Header("Dash Attack")]
     public float dashAttackSpeed = 20f;
     public float dashAttackDuration = 0.2f;
     private bool isDashAttacking;
 
-    // ================= COMBAT =================
     [Header("Combat")]
     public float attackCooldown = 0.5f;
     private bool canAttack = true;
@@ -51,19 +45,13 @@ public class PlayerController : MonoBehaviour
     [Header("Attack Hitbox")]
     public GameObject attackHitbox;
 
-    // ================= UI =================
     [Header("UI")]
     public int monedas = 0;
     public int vidas = 3;
-    public TextMeshProUGUI contadorMonedas;
-    public TextMeshProUGUI contadorVidas;
-    public TextMeshProUGUI textoTemporal;
 
-    // ================= DARKNESS =================
     [Header("Darkness")]
     public DarknessController darknessController;
 
-    // ================= AUDIO =================
     [Header("Audio")]
     public AudioClip coinSound;
     public AudioClip attackSound;
@@ -88,20 +76,22 @@ public class PlayerController : MonoBehaviour
     [Header("Combat Stats")]
     public int extraDamage = 0;
 
-    // ================= START =================
     void Start()
     {
+        PlayerPrefs.DeleteAll(); // ← RESETEA TODO
+
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
 
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
 
-        audioSource = GetComponent<AudioSource>();
-        UpdateUI();
+        FindObjectOfType<HUDController>().ActualizarHUD();
     }
 
-    // ================= UPDATE =================
+
+
     void Update()
     {
         if (isDead) return;
@@ -117,32 +107,25 @@ public class PlayerController : MonoBehaviour
         CheckCoins();
     }
 
-    // ================= GROUND =================
     void CheckGround()
     {
-        // Detecta suelo SOLO si estás cayendo o quieto verticalmente
         bool groundedNow = Physics2D.OverlapCircle(
             groundCheck.position,
             groundRadius,
             groundLayer
         );
 
-        // Si estás subiendo, NO estás en el suelo aunque el círculo toque algo
         if (rb.linearVelocity.y > 0.1f)
             groundedNow = false;
 
         anim.SetBool("isGrounded", groundedNow);
 
-        // Reset de saltos SOLO cuando aterrizas de verdad
         if (!isGrounded && groundedNow)
             jumpCount = 0;
 
         isGrounded = groundedNow;
     }
 
-
-
-    // ================= JUMP =================
     void Jump()
     {
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < 2)
@@ -159,22 +142,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
-
-    void DoJump()
-    {
-        // Reset vertical para saltos consistentes
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-
-        // Aplicar fuerza
-        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-        // Sonido
-        if (jumpSound != null && audioSource != null)
-            audioSource.PlayOneShot(jumpSound);
-    }
-
-    // ================= CROUCH =================
     void Crouch()
     {
         if (!isGrounded) return;
@@ -195,7 +162,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // ================= MOVEMENT =================
     void Movement()
     {
         if (isDashing || isDashAttacking) return;
@@ -209,14 +175,13 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput < 0 && isFacingRight) Flip();
     }
 
-    // ================= ATTACK =================
     void Attack()
     {
         if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
         {
             StartCoroutine(AttackCoroutine());
 
-            if (attackSound != null && audioSource != null)
+            if (attackSound != null)
                 audioSource.PlayOneShot(attackSound);
         }
     }
@@ -236,35 +201,25 @@ public class PlayerController : MonoBehaviour
         canAttack = true;
     }
 
-    // ================= DASH =================
     void DetectDashInput()
     {
-        // No permitir dash si estás atacando con dash
         if (isDashAttacking) return;
-
-        // Solo permitir dash si estás en el suelo
         if (!isGrounded) return;
 
-        // Detectar doble tap SOLO si el jugador pulsa A o D MANUALMENTE
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
         {
             float timeSinceLastTap = Time.time - lastTapTime;
 
             if (timeSinceLastTap <= doubleTapDelay)
-            {
-                // Evitar que el dash se active si vienes de un dash attack
-                if (!isDashAttacking)
-                    StartCoroutine(Dash());
-            }
+                StartCoroutine(Dash());
 
             lastTapTime = Time.time;
         }
     }
 
-
     IEnumerator Dash()
     {
-        if (dashSound != null && audioSource != null)
+        if (dashSound != null)
             audioSource.PlayOneShot(dashSound);
 
         isDashing = true;
@@ -279,7 +234,6 @@ public class PlayerController : MonoBehaviour
         isDashing = false;
     }
 
-    // ================= DASH ATTACK =================
     void DetectDashAttackInput()
     {
         if (!isGrounded || isDashAttacking) return;
@@ -299,18 +253,14 @@ public class PlayerController : MonoBehaviour
         float dir = isFacingRight ? 1 : -1;
         rb.linearVelocity = new Vector2(dir * dashAttackSpeed, 0);
 
-        // Espera un poco para sincronizar con la animación
         yield return new WaitForSeconds(0.1f);
 
-        // Activar hitbox igual que el ataque normal
         attackHitbox.SetActive(true);
 
-        // Mantener hitbox activo durante el ataque
         yield return new WaitForSeconds(0.2f);
 
         attackHitbox.SetActive(false);
 
-        // Termina el dash attack
         rb.linearVelocity = Vector2.zero;
         isDashAttacking = false;
         canAttack = true;
@@ -318,18 +268,17 @@ public class PlayerController : MonoBehaviour
         lastTapTime = 0;
     }
 
-
-
-    // ================= PICKUPS =================
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("PickUp"))
         {
-            if (coinSound != null && audioSource != null)
+            if (coinSound != null)
                 audioSource.PlayOneShot(coinSound);
 
             monedas++;
-            UpdateUI();
+            PlayerPrefs.SetInt("Monedas", monedas);
+            PlayerPrefs.Save();
+            FindObjectOfType<HUDController>().ActualizarHUD();
 
             if (darknessController != null)
                 darknessController.UpdateScreenIcon(monedas);
@@ -338,43 +287,44 @@ public class PlayerController : MonoBehaviour
         }
 
         if (collision.CompareTag("Pincho"))
-        {
             TakeDamage();
-        }
+
         if (collision.CompareTag("Key") && key.isVisible)
         {
-            ShowText("You can now unlock the door.");
             keyCollected = true;
             Destroy(collision.gameObject);
-            if (pickUpSound != null && audioSource != null)
+
+            if (pickUpSound != null)
                 audioSource.PlayOneShot(pickUpSound);
         }
+
         if (collision.CompareTag("Door_closed"))
         {
             if (!keyCollected)
             {
-                ShowText("You must collect 10 coins to summon the key.");
+                // Mensaje temporal si quieres
             }
             else
             {
                 doorController.OpenDoor();
-                if (unlockSound != null && audioSource != null) ;
-                audioSource.PlayOneShot(unlockSound);
+                if (unlockSound != null)
+                    audioSource.PlayOneShot(unlockSound);
             }
-
         }
     }
 
-    // ================= DAMAGE =================
     public void TakeDamage()
     {
         if (isDead) return;
 
-        if (damageSound != null && audioSource != null)
+        if (damageSound != null)
             audioSource.PlayOneShot(damageSound);
 
         vidas--;
-        UpdateUI();
+        PlayerPrefs.SetInt("Vidas", vidas);
+        PlayerPrefs.Save();
+        FindObjectOfType<HUDController>().ActualizarHUD();
+
         anim.SetTrigger("Hurt");
 
         if (vidas <= 0)
@@ -383,7 +333,7 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
-        if (deathSound != null && audioSource != null)
+        if (deathSound != null)
             audioSource.PlayOneShot(deathSound);
 
         isDead = true;
@@ -400,19 +350,9 @@ public class PlayerController : MonoBehaviour
         SceneManager.LoadScene("GameOver");
     }
 
-    // ================= UTILS =================
     void UpdateAnimations()
     {
         anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
-    }
-
-    void UpdateUI()
-    {
-        if (contadorVidas != null)
-            contadorVidas.text = "Vidas: " + vidas;
-
-        if (contadorMonedas != null)
-            contadorMonedas.text = "Monedas: " + monedas;
     }
 
     void Flip()
@@ -434,30 +374,13 @@ public class PlayerController : MonoBehaviour
     void CheckCoins()
     {
         key.CheckCoins(monedas);
-        if (!keyAppeared && key.isVisible && keySound != null && audioSource != null)
+
+        if (!keyAppeared && key.isVisible)
         {
             keyAppeared = true;
-            ShowText("The key has been summoned.");
-            audioSource.PlayOneShot(keySound);
+
+            if (keySound != null)
+                audioSource.PlayOneShot(keySound);
         }
-
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (groundCheck == null) return;
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
-    }
-    private void ShowText(string mensaje)
-    {
-        textoTemporal.text = mensaje;
-        Invoke("HideText", 5f);
-    }
-
-    void HideText()
-    {
-        textoTemporal.text = "";
     }
 }

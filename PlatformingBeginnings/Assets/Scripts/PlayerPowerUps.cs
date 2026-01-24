@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerPowerUps : MonoBehaviour
 {
@@ -13,13 +13,25 @@ public class PlayerPowerUps : MonoBehaviour
     public int damageBonus = 1;
 
     private PlayerController player;
-    private FloatingTextSpawner textSpawner;
 
     void Start()
     {
         player = GetComponent<PlayerController>();
-        textSpawner = GetComponent<FloatingTextSpawner>();
+
+        // Si usas PlayerPrefs, aquí cargas niveles
+        jumpLevel = PlayerPrefs.GetInt("JumpLevel", jumpLevel);
+        speedLevel = PlayerPrefs.GetInt("SpeedLevel", speedLevel);
+        damageLevel = PlayerPrefs.GetInt("DamageLevel", damageLevel);
+
+        // Aplicar niveles al Player
+        player.jumpForce += jumpLevel * jumpBonus;
+        player.speed += speedLevel * speedBonus;
+        player.extraDamage += damageLevel * damageBonus;
+
+        // ACTUALIZAR HUD CUANDO TODO ESTÁ LISTO
+        FindObjectOfType<HUDController>().ActualizarHUD();
     }
+
 
     public void GiveRandomPowerUp()
     {
@@ -30,20 +42,26 @@ public class PlayerPowerUps : MonoBehaviour
             case 0:
                 jumpLevel++;
                 player.jumpForce += jumpBonus;
-                textSpawner.SpawnText("+Salto", Color.yellow);
                 break;
 
             case 1:
                 speedLevel++;
                 player.speed += speedBonus;
-                textSpawner.SpawnText("+Velocidad", Color.green);
                 break;
 
             case 2:
                 damageLevel++;
                 player.extraDamage += damageBonus;
-                textSpawner.SpawnText("+Da�o", Color.red);
                 break;
         }
+
+        // Guardar stats
+        PlayerPrefs.SetInt("JumpLevel", jumpLevel);
+        PlayerPrefs.SetInt("SpeedLevel", speedLevel);
+        PlayerPrefs.SetInt("DamageLevel", damageLevel);
+
+        PlayerPrefs.Save();
+
+        FindObjectOfType<HUDController>().ActualizarHUD();
     }
 }

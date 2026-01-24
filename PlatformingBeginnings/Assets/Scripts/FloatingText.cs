@@ -3,26 +3,29 @@ using TMPro;
 
 public class FloatingText : MonoBehaviour
 {
-    public float moveSpeed = 1f;
+    public float moveSpeed = 50f;
     public float lifetime = 1f;
 
-    private TextMeshPro textMesh;
+    private TextMeshProUGUI textMesh;
+    private RectTransform rectTransform;
 
     void Start()
     {
-        textMesh = GetComponent<TextMeshPro>();
+        textMesh = GetComponent<TextMeshProUGUI>();
+        rectTransform = GetComponent<RectTransform>();
         Destroy(gameObject, lifetime);
     }
 
     void Update()
     {
-        transform.position += Vector3.up * moveSpeed * Time.deltaTime;
+        if (rectTransform != null)
+            rectTransform.anchoredPosition += Vector2.up * moveSpeed * Time.deltaTime;
     }
 
     public void SetText(string text, Color color)
     {
         if (textMesh == null)
-            textMesh = GetComponent<TextMeshPro>();
+            textMesh = GetComponent<TextMeshProUGUI>();
 
         textMesh.text = text;
         textMesh.color = color;
