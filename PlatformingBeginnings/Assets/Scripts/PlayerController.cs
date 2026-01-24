@@ -57,6 +57,7 @@ public class PlayerController : MonoBehaviour
     public int vidas = 3;
     public TextMeshProUGUI contadorMonedas;
     public TextMeshProUGUI contadorVidas;
+    public TextMeshProUGUI textoTemporal;
 
     // ================= DARKNESS =================
     [Header("Darkness")]
@@ -342,6 +343,7 @@ public class PlayerController : MonoBehaviour
         }
         if (collision.CompareTag("Key") && key.isVisible)
         {
+            ShowText("You can now unlock the door.");
             keyCollected = true;
             Destroy(collision.gameObject);
             if (pickUpSound != null && audioSource != null)
@@ -349,9 +351,17 @@ public class PlayerController : MonoBehaviour
         }
         if (collision.CompareTag("Door_closed"))
         {
-            if (unlockSound != null && audioSource != null)
+            if (!keyCollected)
+            {
+                ShowText("You must collect 10 coins to summon the key.");
+            }
+            else
+            {
+                doorController.OpenDoor();
+                if (unlockSound != null && audioSource != null) ;
                 audioSource.PlayOneShot(unlockSound);
-            doorController.OpenDoor();
+            }
+
         }
     }
 
@@ -427,6 +437,7 @@ public class PlayerController : MonoBehaviour
         if (!keyAppeared && key.isVisible && keySound != null && audioSource != null)
         {
             keyAppeared = true;
+            ShowText("The key has been summoned.");
             audioSource.PlayOneShot(keySound);
         }
 
@@ -438,5 +449,15 @@ public class PlayerController : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
+    }
+    private void ShowText(string mensaje)
+    {
+        textoTemporal.text = mensaje;
+        Invoke("HideText", 5f);
+    }
+
+    void HideText()
+    {
+        textoTemporal.text = "";
     }
 }

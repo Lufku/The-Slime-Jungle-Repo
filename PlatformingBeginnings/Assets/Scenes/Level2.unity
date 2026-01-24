@@ -3563,6 +3563,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: textoTemporal
+      value: 
+      objectReference: {fileID: 1850757407}
+    - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: doorController
       value: 
       objectReference: {fileID: 1816139881}
@@ -15389,8 +15393,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -15, y: -104}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 1, y: 358}
+  m_SizeDelta: {x: 600.88, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1850757407
 MonoBehaviour:
@@ -15412,7 +15416,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -16956,7 +16960,7 @@ GameObject:
   - component: {fileID: 2057738519}
   - component: {fileID: 2057738523}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: Help Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17023,7 +17027,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 675
   m_TargetDisplay: 0
 --- !u!224 &2057738522
 RectTransform:
@@ -17057,7 +17061,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 174c58ee3c1c97749911f8862e88c074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextController
-  target: {fileID: 301645962}
+  target: {fileID: 693666629}
   offset: {x: 0, y: 0, z: 0}
 --- !u!1 &2061162608
 GameObject:
