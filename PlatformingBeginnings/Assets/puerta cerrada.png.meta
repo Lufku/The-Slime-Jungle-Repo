@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: fb6166c9384cbb3489c5cc9f829ad8e3
+guid: c1233d79a08eb424d80759fa9b77ae37
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7892554744507296685
-    second: pantalla negra muy grande_0
+      213: -170779946217407353
+    second: puerta cerrada_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pantalla negra muy grande_0
+      name: puerta cerrada_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 16113
-        height: 10254
+        width: 702
+        height: 511
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3549153c643087290800000000000000
-      internalID: -7892554744507296685
+      spriteID: 78c73f23b8441adf0800000000000000
+      internalID: -170779946217407353
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pantalla negra muy grande_0: -7892554744507296685
+      puerta cerrada_0: -170779946217407353
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -11,6 +11,9 @@ TagManager:
   - Bala
   - Ramp
   - Slime
+  - Key
+  - Door_open
+  - Door_closed
   layers:
   - Default
   - TransparentFX
