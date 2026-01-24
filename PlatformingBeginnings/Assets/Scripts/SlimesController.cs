@@ -3,13 +3,25 @@ using System.Collections;
 
 public class SlimesController : MonoBehaviour
 {
+    [Header("Size")]
+    [Range(0.3f, 4f)]
+    public float slimeSize = 1f;
+
     [Header("Stats")]
-    public int vida = 3;
-    public float speed = 2f;
+    public int baseVida = 3;
+    public float baseSpeed = 2f;
+    public int baseDamage = 1;
+
+    private int vida;
+    private float speed;
+    private int damage;
 
     [Header("Detection")]
-    public float detectionRange = 6f;
-    public float attackRange = 1.5f;
+    public float baseDetectionRange = 6f;
+    public float baseAttackRange = 1.5f;
+
+    private float detectionRange;
+    private float attackRange;
 
     private Transform player;
     private Rigidbody2D rb;
@@ -17,15 +29,22 @@ public class SlimesController : MonoBehaviour
 
     private bool isDead = false;
     private bool isAttacking = false;
-    private bool attackCooldown = false; // cooldown entre ataques
+    private bool attackCooldown = false;
 
     [Header("Knockback")]
-    public float knockbackForce = 10f;  // Aumentado
-    public float knockbackUpForce = 4f; // Aumentado
+    public float baseKnockbackForce = 10f;
+    public float baseKnockbackUpForce = 4f;
+
+    private float knockbackForce;
+    private float knockbackUpForce;
 
     [Header("Attack")]
-    public float swallowDuration = 1f;   // duración de la animación
-    public float attackDelay = 2f;       // cooldown entre ataques en segundos
+    public float swallowDuration = 1f;
+    public float attackDelay = 2f;
+
+    [Header("Audio")]
+    private AudioSource audioSource;
+    public AudioClip killSound;
 
     void Start()
     {
@@ -35,6 +54,19 @@ public class SlimesController : MonoBehaviour
 
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+
+        transform.localScale = new Vector3(slimeSize, slimeSize, 1);
+
+        vida = Mathf.RoundToInt(baseVida * slimeSize);
+        damage = Mathf.RoundToInt(baseDamage * slimeSize);
+        speed = baseSpeed / slimeSize;
+
+        detectionRange = baseDetectionRange * slimeSize;
+        attackRange = baseAttackRange * slimeSize;
+
+        knockbackForce = baseKnockbackForce * slimeSize;
+        knockbackUpForce = baseKnockbackUpForce * slimeSize;
     }
 
     void Update()
@@ -43,10 +75,8 @@ public class SlimesController : MonoBehaviour
 
         float distance = Vector2.Distance(transform.position, player.position);
 
-        // Swallow si está cerca y no atacando y no en cooldown
         if (distance <= attackRange && !isAttacking && !attackCooldown)
             StartCoroutine(SwallowAttack());
-        // Moverse hacia el player si está en rango de detección
         else if (distance <= detectionRange)
             MoveTowardsPlayer();
         else
@@ -63,8 +93,7 @@ public class SlimesController : MonoBehaviour
         Vector2 direction = (player.position - transform.position).normalized;
         rb.linearVelocity = new Vector2(direction.x * speed, rb.linearVelocity.y);
 
-        // Girar sprite
-        transform.localScale = new Vector3(Mathf.Sign(direction.x), 1, 1);
+        transform.localScale = new Vector3(Mathf.Sign(direction.x) * slimeSize, slimeSize, 1);
     }
 
     IEnumerator SwallowAttack()
@@ -81,32 +110,41 @@ public class SlimesController : MonoBehaviour
 
         isAttacking = false;
 
-        // Espera antes de poder atacar otra vez
         yield return new WaitForSeconds(attackDelay);
         attackCooldown = false;
     }
 
-    // ---------- DAÑO AL PLAYER ----------
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (isDead || !isAttacking) return;
 
         if (collision.CompareTag("Player"))
         {
-            PlayerController playerScript = collision.transform.root.GetComponent<PlayerController>();
-            if (playerScript != null)
-                playerScript.TakeDamage();
+            PlayerController p = collision.transform.root.GetComponent<PlayerController>();
+            if (p != null)
+            {
+                for (int i = 0; i < damage; i++)
+                    p.TakeDamage();
+            }
         }
     }
 
-    // ---------- DAÑO AL SLIME ----------
     public void TakeHit(Transform attacker)
     {
         if (isDead) return;
 
-        vida--;
-        anim.SetTrigger("Hit");
+        if (killSound != null && audioSource != null)
+            audioSource.PlayOneShot(killSound);
 
+        int dmg = 1;
+
+        PlayerController p = attacker.GetComponent<PlayerController>();
+        if (p != null)
+            dmg += p.extraDamage;
+
+        vida -= dmg;
+
+        anim.SetTrigger("Hit");
         ApplyKnockback(attacker);
 
         if (vida <= 0)
@@ -133,16 +171,26 @@ public class SlimesController : MonoBehaviour
         if (col != null)
             col.enabled = false;
 
+        GivePowerUpToPlayer();
+
         Destroy(gameObject, 2f);
     }
 
-    // ---------- GIZMOS ----------
+    void GivePowerUpToPlayer()
+    {
+        if (player == null) return;
+
+        PlayerPowerUps power = player.GetComponent<PlayerPowerUps>();
+        if (power != null)
+            power.GiveRandomPowerUp();
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        Gizmos.DrawWireSphere(transform.position, baseDetectionRange * slimeSize);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, baseAttackRange * slimeSize);
     }
 }

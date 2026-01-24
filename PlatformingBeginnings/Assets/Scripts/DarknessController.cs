@@ -27,7 +27,6 @@ public class DarknessController : MonoBehaviour
     /// <param name="monedas">Cantidad de monedas actuales del Player</param>
     public void UpdateScreenIcon(int monedas)
     {
-        Debug.Log("UpdateScreenIcon llamado con monedas: " + monedas);
 
         // Solo se activa en Level2
         if (SceneManager.GetActiveScene().name != "Level2") return;

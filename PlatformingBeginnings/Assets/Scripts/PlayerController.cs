@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
@@ -21,10 +21,8 @@ public class PlayerController : MonoBehaviour
     // ================= JUMP =================
     [Header("Jump")]
     public float jumpForce = 8f;
-    public int maxJumps = 2;
-    private int jumpCount;
+    private int jumpCount = 0; // 0 = en suelo, 1 = primer salto, 2 = doble salto
     private bool isGrounded;
-    private bool wasGroundedLastFrame = false;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
@@ -64,6 +62,26 @@ public class PlayerController : MonoBehaviour
     [Header("Darkness")]
     public DarknessController darknessController;
 
+    // ================= AUDIO =================
+    [Header("Audio")]
+    public AudioClip coinSound;
+    public AudioClip attackSound;
+    public AudioClip dashSound;
+    public AudioClip jumpSound;
+    public AudioClip damageSound;
+    public AudioClip deathSound;
+    public AudioClip doorSound;
+    public AudioClip keySound;
+    public AudioClip pickUpSound;
+    private AudioSource audioSource;
+
+    [Header("Key")]
+    public KeyController key;
+
+
+    [Header("Combat Stats")]
+    public int extraDamage = 0;
+
     // ================= START =================
     void Start()
     {
@@ -73,6 +91,7 @@ public class PlayerController : MonoBehaviour
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
 
+        audioSource = GetComponent<AudioSource>();
         UpdateUI();
     }
 
@@ -89,45 +108,65 @@ public class PlayerController : MonoBehaviour
         Attack();
         Crouch();
         UpdateAnimations();
+        CheckCoins();
     }
 
     // ================= GROUND =================
     void CheckGround()
     {
-        // Detectar si estamos tocando el suelo
-        bool groundedNow = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        // Detecta suelo SOLO si estás cayendo o quieto verticalmente
+        bool groundedNow = Physics2D.OverlapCircle(
+            groundCheck.position,
+            groundRadius,
+            groundLayer
+        );
+
+        // Si estás subiendo, NO estás en el suelo aunque el círculo toque algo
+        if (rb.linearVelocity.y > 0.1f)
+            groundedNow = false;
+
         anim.SetBool("isGrounded", groundedNow);
 
-        // Solo reinicia jumpCount si antes no est�bamos en el suelo y ahora s�
+        // Reset de saltos SOLO cuando aterrizas de verdad
         if (!isGrounded && groundedNow)
-        {
             jumpCount = 0;
-        }
 
         isGrounded = groundedNow;
     }
 
+
+
     // ================= JUMP =================
     void Jump()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < 2)
         {
-            // Reinicia velocidad vertical antes del salto
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-
-            // Aplica fuerza de salto
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
-            // Animaciones seg�n salto
             if (jumpCount == 0)
-                anim.SetTrigger("Jump");        // Primer salto
+                anim.SetTrigger("Jump");
             else
-                anim.SetTrigger("DoubleJump");  // Segundo salto o m�s, seg�n maxJumps
+                anim.SetTrigger("DoubleJump");
 
             jumpCount++;
         }
     }
 
+
+
+    void DoJump()
+    {
+        // Reset vertical para saltos consistentes
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+
+        // Aplicar fuerza
+        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+        // Sonido
+        if (jumpSound != null && audioSource != null)
+            audioSource.PlayOneShot(jumpSound);
+    }
 
     // ================= CROUCH =================
     void Crouch()
@@ -168,7 +207,12 @@ public class PlayerController : MonoBehaviour
     void Attack()
     {
         if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
+        {
             StartCoroutine(AttackCoroutine());
+
+            if (attackSound != null && audioSource != null)
+                audioSource.PlayOneShot(attackSound);
+        }
     }
 
     IEnumerator AttackCoroutine()
@@ -189,19 +233,34 @@ public class PlayerController : MonoBehaviour
     // ================= DASH =================
     void DetectDashInput()
     {
-        if (!isGrounded || isDashAttacking) return;
+        // No permitir dash si estás atacando con dash
+        if (isDashAttacking) return;
 
+        // Solo permitir dash si estás en el suelo
+        if (!isGrounded) return;
+
+        // Detectar doble tap SOLO si el jugador pulsa A o D MANUALMENTE
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
         {
-            if (Time.time - lastTapTime <= doubleTapDelay)
-                StartCoroutine(Dash());
+            float timeSinceLastTap = Time.time - lastTapTime;
+
+            if (timeSinceLastTap <= doubleTapDelay)
+            {
+                // Evitar que el dash se active si vienes de un dash attack
+                if (!isDashAttacking)
+                    StartCoroutine(Dash());
+            }
 
             lastTapTime = Time.time;
         }
     }
 
+
     IEnumerator Dash()
     {
+        if (dashSound != null && audioSource != null)
+            audioSource.PlayOneShot(dashSound);
+
         isDashing = true;
         anim.SetTrigger("Dash");
 
@@ -226,6 +285,7 @@ public class PlayerController : MonoBehaviour
     IEnumerator DashAttack()
     {
         isDashAttacking = true;
+        isDashing = false;
         canAttack = false;
 
         anim.SetTrigger("DashAttack");
@@ -233,22 +293,35 @@ public class PlayerController : MonoBehaviour
         float dir = isFacingRight ? 1 : -1;
         rb.linearVelocity = new Vector2(dir * dashAttackSpeed, 0);
 
-        yield return new WaitForSeconds(0.05f);
+        // Espera un poco para sincronizar con la animación
+        yield return new WaitForSeconds(0.1f);
+
+        // Activar hitbox igual que el ataque normal
         attackHitbox.SetActive(true);
 
-        yield return new WaitForSeconds(dashAttackDuration);
+        // Mantener hitbox activo durante el ataque
+        yield return new WaitForSeconds(0.2f);
+
         attackHitbox.SetActive(false);
 
+        // Termina el dash attack
         rb.linearVelocity = Vector2.zero;
         isDashAttacking = false;
         canAttack = true;
+
+        lastTapTime = 0;
     }
+
+
 
     // ================= PICKUPS =================
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("PickUp"))
         {
+            if (coinSound != null && audioSource != null)
+                audioSource.PlayOneShot(coinSound);
+
             monedas++;
             UpdateUI();
 
@@ -267,6 +340,9 @@ public class PlayerController : MonoBehaviour
     {
         if (isDead) return;
 
+        if (damageSound != null && audioSource != null)
+            audioSource.PlayOneShot(damageSound);
+
         vidas--;
         UpdateUI();
         anim.SetTrigger("Hurt");
@@ -277,6 +353,9 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
+        if (deathSound != null && audioSource != null)
+            audioSource.PlayOneShot(deathSound);
+
         isDead = true;
         anim.SetTrigger("Death");
 
@@ -320,6 +399,11 @@ public class PlayerController : MonoBehaviour
             pos.x *= -1;
             attackHitbox.transform.localPosition = pos;
         }
+    }
+
+    void CheckCoins()
+    {
+        key.CheckCoins(monedas);
     }
 
     private void OnDrawGizmosSelected()
