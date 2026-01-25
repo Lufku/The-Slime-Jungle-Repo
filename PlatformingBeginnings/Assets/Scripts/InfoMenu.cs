@@ -7,7 +7,7 @@ public class InfoMenu : MonoBehaviour
 
 	public void PlayGame()
 	{
-		SceneManager.LoadScene("Escena Level 1 Recuperada");
+		SceneManager.LoadScene("Map");
 	}
 
 	public void Controls()
