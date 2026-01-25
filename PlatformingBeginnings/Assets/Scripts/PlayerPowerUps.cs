@@ -18,20 +18,18 @@ public class PlayerPowerUps : MonoBehaviour
     {
         player = GetComponent<PlayerController>();
 
-        // Si usas PlayerPrefs, aquí cargas niveles
         jumpLevel = PlayerPrefs.GetInt("JumpLevel", jumpLevel);
         speedLevel = PlayerPrefs.GetInt("SpeedLevel", speedLevel);
         damageLevel = PlayerPrefs.GetInt("DamageLevel", damageLevel);
 
-        // Aplicar niveles al Player
         player.jumpForce += jumpLevel * jumpBonus;
         player.speed += speedLevel * speedBonus;
         player.extraDamage += damageLevel * damageBonus;
 
-        // ACTUALIZAR HUD CUANDO TODO ESTÁ LISTO
-        FindObjectOfType<HUDController>().ActualizarHUD();
+        var hud = FindFirstObjectByType<HUDController>();
+        if (hud != null)
+            hud.ActualizarHUD();
     }
-
 
     public void GiveRandomPowerUp()
     {
@@ -55,13 +53,13 @@ public class PlayerPowerUps : MonoBehaviour
                 break;
         }
 
-        // Guardar stats
         PlayerPrefs.SetInt("JumpLevel", jumpLevel);
         PlayerPrefs.SetInt("SpeedLevel", speedLevel);
         PlayerPrefs.SetInt("DamageLevel", damageLevel);
-
         PlayerPrefs.Save();
 
-        FindObjectOfType<HUDController>().ActualizarHUD();
+        var hud = FindFirstObjectByType<HUDController>();
+        if (hud != null)
+            hud.ActualizarHUD();
     }
 }
