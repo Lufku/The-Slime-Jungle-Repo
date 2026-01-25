@@ -120,11 +120,14 @@ public class PlayerController : MonoBehaviour
     }
     void CheckFallRespawn()
     {
-        if (transform.position.y < -12f)
-        {
+        // Solo respawnear en la escena FinalLevel
+        if (SceneManager.GetActiveScene().name != "FinalLevel")
+            return;
+
+        if (transform.position.y < 12f)
             Respawn();
-        }
     }
+
     void Respawn()
     {
         rb.linearVelocity = Vector2.zero;
