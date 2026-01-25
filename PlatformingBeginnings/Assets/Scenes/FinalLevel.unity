@@ -1173,6 +1173,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1683680922}
     - target: {fileID: 7631949740870233820, guid: 28da68a3cd0c23943b4d31bc52bbe932, type: 3}
+      propertyPath: HUDController
+      value: 
+      objectReference: {fileID: 1417097585}
+    - target: {fileID: 7631949740870233820, guid: 28da68a3cd0c23943b4d31bc52bbe932, type: 3}
       propertyPath: doorController
       value: 
       objectReference: {fileID: 893670654}
