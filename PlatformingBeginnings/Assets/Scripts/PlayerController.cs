@@ -135,7 +135,7 @@ public class PlayerController : MonoBehaviour
 
         // Opcional: perder una vida
         vidas--;
-        FindObjectOfType<HUDController>().ActualizarHUD();
+        HUDController.ActualizarHUD();
 
         if (vidas <= 0)
             Die();
