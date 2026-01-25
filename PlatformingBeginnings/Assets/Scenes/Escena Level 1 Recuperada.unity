@@ -514,6 +514,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8300000, guid: 54270afbaf6ce8942b422b81176ceec8, type: 3}
     - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: jumpForce
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: jumpSound
       value: 
       objectReference: {fileID: 8300000, guid: 306c5117e3c936941921633d1bdc855d, type: 3}
@@ -533,6 +537,10 @@ PrefabInstance:
       propertyPath: damageSound
       value: 
       objectReference: {fileID: 8300000, guid: 153451e988f2bc947b5c16d57fd7a89a, type: 3}
+    - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
+      propertyPath: extraDamage
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: giantScreen
       value: 
@@ -2061,6 +2069,17 @@ PrefabInstance:
     - target: {fileID: 1027519002609931315, guid: 0c2e505237a45bc4caa05a5d82c9b28d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1308160452502943546, guid: 0c2e505237a45bc4caa05a5d82c9b28d, type: 3}
+      propertyPath: m_text
+      value: 'Fuerza: 1
+
+        Salto: 5
+
+        Velocidad: 5
+
+        Vidas:
+        10'
       objectReference: {fileID: 0}
     - target: {fileID: 1308160452502943546, guid: 0c2e505237a45bc4caa05a5d82c9b28d, type: 3}
       propertyPath: m_fontSize
