@@ -308,9 +308,11 @@ public class PlayerController : MonoBehaviour
                 {
                     doorController.OpenDoor();
                     PlaySound(unlockSound);
-                    doorController.OpenDoor();
                 }
 
+        }
+        if (collision.CompareTag("Door_open")) {
+            Invoke(nameof(LoadFinalLevel), 2f);
         }
     }
 
@@ -345,6 +347,11 @@ public class PlayerController : MonoBehaviour
     {
         SceneManager.LoadScene("GameOver");
     }
+    void LoadFinalLevel()
+    {
+        SceneManager.LoadScene("Map 2-3");
+    }
+
 
     void UpdateAnimations()
     {
