@@ -5,6 +5,9 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Respawn")]
+    public Transform respawnPoint;
+
     [Header("Movement")]
     public float speed = 5f;
     private float horizontalInput;
@@ -112,6 +115,27 @@ public class PlayerController : MonoBehaviour
         UpdateAnimations();
         CheckCoins();
         HUDController.ActualizarHUD();
+        CheckFallRespawn();
+
+    }
+    void CheckFallRespawn()
+    {
+        if (transform.position.y < -12f)
+        {
+            Respawn();
+        }
+    }
+    void Respawn()
+    {
+        rb.linearVelocity = Vector2.zero;
+        transform.position = respawnPoint.position;
+
+        // Opcional: perder una vida
+        vidas--;
+        FindObjectOfType<HUDController>().ActualizarHUD();
+
+        if (vidas <= 0)
+            Die();
     }
 
     void CheckGround()
