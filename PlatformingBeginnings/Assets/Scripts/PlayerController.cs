@@ -76,6 +76,12 @@ public class PlayerController : MonoBehaviour
     [Header("Combat Stats")]
     public int extraDamage = 0;
 
+    [Header("Text")]
+    public TextMeshProUGUI textoTemporal;
+
+    [Header("HUD")]
+    public HUDController HUDController;
+
     void Start()
     {
         PlayerPrefs.DeleteAll(); // ← RESETEA TODO
@@ -87,7 +93,7 @@ public class PlayerController : MonoBehaviour
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
 
-        FindObjectOfType<HUDController>().ActualizarHUD();
+        //FindObjectOfType<HUDController>().ActualizarHUD();
     }
 
 
@@ -105,6 +111,7 @@ public class PlayerController : MonoBehaviour
         Crouch();
         UpdateAnimations();
         CheckCoins();
+        HUDController.ActualizarHUD();
     }
 
     void CheckGround()
@@ -180,9 +187,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
         {
             StartCoroutine(AttackCoroutine());
-
-            if (attackSound != null)
-                audioSource.PlayOneShot(attackSound);
+            PlaySound(attackSound);
         }
     }
 
@@ -219,8 +224,7 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator Dash()
     {
-        if (dashSound != null)
-            audioSource.PlayOneShot(dashSound);
+        PlaySound(dashSound);
 
         isDashing = true;
         anim.SetTrigger("Dash");
@@ -272,13 +276,11 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.CompareTag("PickUp"))
         {
-            if (coinSound != null)
-                audioSource.PlayOneShot(coinSound);
-
+            PlaySound(coinSound);
             monedas++;
             PlayerPrefs.SetInt("Monedas", monedas);
             PlayerPrefs.Save();
-            FindObjectOfType<HUDController>().ActualizarHUD();
+            //FindObjectOfType<HUDController>().ActualizarHUD();
 
             if (darknessController != null)
                 darknessController.UpdateScreenIcon(monedas);
@@ -291,39 +293,35 @@ public class PlayerController : MonoBehaviour
 
         if (collision.CompareTag("Key") && key.isVisible)
         {
+            ShowText("You can now unlock the door.");
             keyCollected = true;
             Destroy(collision.gameObject);
-
-            if (pickUpSound != null)
-                audioSource.PlayOneShot(pickUpSound);
+            PlaySound(pickUpSound);
         }
-
         if (collision.CompareTag("Door_closed"))
         {
-            if (!keyCollected)
-            {
-                // Mensaje temporal si quieres
-            }
-            else
-            {
-                doorController.OpenDoor();
-                if (unlockSound != null)
-                    audioSource.PlayOneShot(unlockSound);
-            }
+                if (!keyCollected)
+                {
+                    ShowText("You must collect 10 coins to summon the key.");
+                }
+                else
+                {
+                    doorController.OpenDoor();
+                    PlaySound(unlockSound);
+                    doorController.OpenDoor();
+                }
+
         }
     }
 
     public void TakeDamage()
     {
         if (isDead) return;
-
-        if (damageSound != null)
-            audioSource.PlayOneShot(damageSound);
-
+        PlaySound(damageSound);
         vidas--;
         PlayerPrefs.SetInt("Vidas", vidas);
         PlayerPrefs.Save();
-        FindObjectOfType<HUDController>().ActualizarHUD();
+        //FindObjectOfType<HUDController>().ActualizarHUD();
 
         anim.SetTrigger("Hurt");
 
@@ -333,9 +331,7 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
-        if (deathSound != null)
-            audioSource.PlayOneShot(deathSound);
-
+        PlaySound(deathSound);
         isDead = true;
         anim.SetTrigger("Death");
 
@@ -374,13 +370,30 @@ public class PlayerController : MonoBehaviour
     void CheckCoins()
     {
         key.CheckCoins(monedas);
-
         if (!keyAppeared && key.isVisible)
         {
             keyAppeared = true;
-
-            if (keySound != null)
-                audioSource.PlayOneShot(keySound);
+            ShowText("The key has been summoned.");
+            PlaySound(keySound);
         }
+
+    }
+
+    private void PlaySound(AudioClip sound)
+    {
+        if (audioSource != null && sound != null) { 
+            audioSource.PlayOneShot(sound);
+        }
+
+    }
+    private void ShowText(string mensaje)
+    {
+        textoTemporal.text = mensaje;
+        Invoke("HideText", 5f);
+    }
+
+    void HideText()
+    {
+        textoTemporal.text = "";
     }
 }

@@ -484,7 +484,7 @@ PrefabInstance:
     - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: key
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 732952942}
     - target: {fileID: 1308740774370074686, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
       propertyPath: keySound
       value: 
@@ -2413,6 +2413,7 @@ GameObject:
   - component: {fileID: 732952942}
   - component: {fileID: 732952941}
   - component: {fileID: 732952940}
+  - component: {fileID: 732952945}
   m_Layer: 0
   m_Name: pixel-key_0
   m_TagString: Key
@@ -2580,6 +2581,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &732952945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 732952939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b7a7232fd803e947bf87f6cc1dc819a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeyController
+  coinsNeeded: 1
+  isVisible: 0
 --- !u!1 &761074278 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1137478493123110864, guid: 2bbb3d9850025c04cb53091715da7146, type: 3}
@@ -7482,7 +7497,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 4
-      m_TileSpriteIndex: 4
+      m_TileSpriteIndex: 12
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -8049,8 +8064,8 @@ Tilemap:
     m_Data: {fileID: 372390009, guid: 5fe5454ec8605de43809133b020d1b69, type: 3}
   - m_RefCount: 6
     m_Data: {fileID: 226342121, guid: 69ceae66f300629418be995335c76b85, type: 3}
-  - m_RefCount: 1
-    m_Data: {fileID: 1809391310, guid: 5fe5454ec8605de43809133b020d1b69, type: 3}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
   - m_RefCount: 3
     m_Data: {fileID: 1121040729, guid: 5fe5454ec8605de43809133b020d1b69, type: 3}
   - m_RefCount: 4
@@ -8065,8 +8080,8 @@ Tilemap:
     m_Data: {fileID: -1603182679, guid: 5fe5454ec8605de43809133b020d1b69, type: 3}
   - m_RefCount: 2
     m_Data: {fileID: -1493193376, guid: 5fe5454ec8605de43809133b020d1b69, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: 1809391310, guid: 5fe5454ec8605de43809133b020d1b69, type: 3}
   - m_RefCount: 4
     m_Data: {fileID: -948974497, guid: 69ceae66f300629418be995335c76b85, type: 3}
   - m_RefCount: 1
