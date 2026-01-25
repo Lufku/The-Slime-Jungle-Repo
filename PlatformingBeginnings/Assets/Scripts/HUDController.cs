@@ -40,7 +40,7 @@ public class HUDController : MonoBehaviour
         if (statsText != null)
         {
             statsText.text =
-                "Daño: " + player.extraDamage + "\n" +
+                "Fuerza: " + player.extraDamage + "\n" +
                 "Salto: " + player.jumpForce + "\n" +
                 "Velocidad: " + player.speed + "\n" +
                 "Vidas: " + player.vidas;

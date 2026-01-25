@@ -103,10 +103,10 @@ TextureImporter:
       name: GIANT_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 8526
-        height: 5999
+        x: 33
+        y: 25
+        width: 8460
+        height: 5949
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
