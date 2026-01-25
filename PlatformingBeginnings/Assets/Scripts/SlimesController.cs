@@ -175,10 +175,14 @@ public class SlimesController : MonoBehaviour
 
         GivePowerUpToPlayer();
 
-        FindObjectOfType<HUDController>().SumarSlime();
+        // CORREGIDO: método moderno sin warnings
+        var hud = FindFirstObjectByType<HUDController>();
+        if (hud != null)
+            hud.SumarSlime();
 
         Destroy(gameObject, 2f);
     }
+
 
     void GivePowerUpToPlayer()
     {
