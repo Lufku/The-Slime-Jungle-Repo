@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement")]
     public float speed = 5f;
+    [HideInInspector] public float baseSpeed;
+
     private float horizontalInput;
     private bool isFacingRight = true;
 
@@ -20,7 +22,9 @@ public class PlayerController : MonoBehaviour
     private bool isCrouching = false;
 
     [Header("Jump")]
-    public float jumpForce = 8f;
+    public float jumpForce = 6f;
+    [HideInInspector] public float baseJumpForce;
+
     private int jumpCount = 0;
     private bool isGrounded;
 
@@ -50,7 +54,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("UI")]
     public int monedas = 0;
-    public int vidas = 3;
+    public int vidas = 10;
 
     [Header("Darkness")]
     public DarknessController darknessController;
@@ -77,7 +81,8 @@ public class PlayerController : MonoBehaviour
     public DoorController doorController;
 
     [Header("Combat Stats")]
-    public int extraDamage = 0;
+    public int extraDamage = 1;
+    [HideInInspector] public int baseExtraDamage;
 
     [Header("Text")]
     public TextMeshProUGUI textoTemporal;
@@ -85,10 +90,17 @@ public class PlayerController : MonoBehaviour
     [Header("HUD")]
     public HUDController HUDController;
 
+    // -----------------------------
+    // AWAKE: SIEMPRE ANTES QUE Start()
+    // -----------------------------
+    void Awake()
+    {
+        baseJumpForce = jumpForce;
+        baseSpeed = speed;
+        baseExtraDamage = extraDamage;
+    }
     void Start()
     {
-        PlayerPrefs.DeleteAll(); // ← RESETEA TODO
-
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
@@ -96,9 +108,19 @@ public class PlayerController : MonoBehaviour
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
 
-        //FindObjectOfType<HUDController>().ActualizarHUD();
-    }
+        // RESET TOTAL SOLO AL ENTRAR EN LA ESCENA DE INICIO
+        if (SceneManager.GetActiveScene().name == "Map")
+        {
+            PlayerPrefs.DeleteAll();
 
+            jumpForce = baseJumpForce;
+            speed = baseSpeed;
+            extraDamage = baseExtraDamage;
+
+            vidas = 10;
+            monedas = 0;
+        }
+    }
 
 
     void Update()
@@ -114,17 +136,77 @@ public class PlayerController : MonoBehaviour
         Crouch();
         UpdateAnimations();
         CheckCoins();
-        HUDController.ActualizarHUD();
         CheckFallRespawn();
 
+        HUDController?.ActualizarHUD();
     }
+
+    // -----------------------------
+    // MUERTE
+    // -----------------------------
+    public void TakeDamage()
+    {
+        if (isDead) return;
+
+        PlaySound(damageSound);
+        vidas--;
+
+        HUDController.ActualizarHUD();
+        anim.SetTrigger("Hurt");
+
+        if (vidas <= 0)
+            Die();
+    }
+
+    void Die()
+    {
+        PlaySound(deathSound);
+        isDead = true;
+        anim.SetTrigger("Death");
+
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
+
+        // Guardar escena exacta donde mueres
+        PlayerPrefs.SetString("LastLevel", SceneManager.GetActiveScene().name);
+
+        Invoke(nameof(LoadDeathScene), 2f);
+    }
+
+
+    void LoadDeathScene()
+    {
+        SceneManager.LoadScene("GameOver");
+    }
+
+    // -----------------------------
+    // FLUJO DE ESCENAS
+    // -----------------------------
+    void LoadNextLevel()
+    {
+        string current = SceneManager.GetActiveScene().name;
+
+        if (current == "Escena Level 1 Recuperada")
+            SceneManager.LoadScene("Map 1-2");
+        else if (current == "Map 1-2")
+            SceneManager.LoadScene("Level2");
+        else if (current == "Level2")
+            SceneManager.LoadScene("Map 2-3");
+        else if (current == "Map 2-3")
+            SceneManager.LoadScene("FinalLevel");
+        else if (current == "FinalLevel")
+            SceneManager.LoadScene("Victory");
+    }
+
+    // -----------------------------
+    // RESTO DE FUNCIONES (sin cambios)
+    // -----------------------------
     void CheckFallRespawn()
     {
-        // Solo respawnear en la escena FinalLevel
         if (SceneManager.GetActiveScene().name != "FinalLevel")
             return;
 
-        if (transform.position.y < 12f)
+        if (transform.position.y < -12f)
             Respawn();
     }
 
@@ -133,7 +215,6 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = Vector2.zero;
         transform.position = respawnPoint.position;
 
-        // Opcional: perder una vida
         vidas--;
         HUDController.ActualizarHUD();
 
@@ -167,10 +248,7 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 
-            if (jumpCount == 0)
-                anim.SetTrigger("Jump");
-            else
-                anim.SetTrigger("DoubleJump");
+            anim.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
 
             jumpCount++;
         }
@@ -207,30 +285,6 @@ public class PlayerController : MonoBehaviour
 
         if (horizontalInput > 0 && !isFacingRight) Flip();
         if (horizontalInput < 0 && isFacingRight) Flip();
-    }
-
-    void Attack()
-    {
-        if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
-        {
-            StartCoroutine(AttackCoroutine());
-            PlaySound(attackSound);
-        }
-    }
-
-    IEnumerator AttackCoroutine()
-    {
-        canAttack = false;
-        anim.SetTrigger("Attack");
-
-        yield return new WaitForSeconds(0.1f);
-        attackHitbox.SetActive(true);
-
-        yield return new WaitForSeconds(0.2f);
-        attackHitbox.SetActive(false);
-
-        yield return new WaitForSeconds(attackCooldown);
-        canAttack = true;
     }
 
     void DetectDashInput()
@@ -299,87 +353,6 @@ public class PlayerController : MonoBehaviour
         lastTapTime = 0;
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("PickUp"))
-        {
-            PlaySound(coinSound);
-            monedas++;
-            PlayerPrefs.SetInt("Monedas", monedas);
-            PlayerPrefs.Save();
-            //FindObjectOfType<HUDController>().ActualizarHUD();
-
-            if (darknessController != null)
-                darknessController.UpdateScreenIcon(monedas);
-
-            Destroy(collision.gameObject);
-        }
-
-        if (collision.CompareTag("Pincho"))
-            TakeDamage();
-
-        if (collision.CompareTag("Key") && key.isVisible)
-        {
-            ShowText("You can now unlock the door.");
-            keyCollected = true;
-            Destroy(collision.gameObject);
-            PlaySound(pickUpSound);
-        }
-        if (collision.CompareTag("Door_closed"))
-        {
-                if (!keyCollected)
-                {
-                    ShowText("You must collect 10 coins to summon the key.");
-                }
-                else
-                {
-                    doorController.OpenDoor();
-                    PlaySound(unlockSound);
-                }
-
-        }
-        if (collision.CompareTag("Door_open")) {
-            Invoke(nameof(LoadFinalLevel), 2f);
-        }
-    }
-
-    public void TakeDamage()
-    {
-        if (isDead) return;
-        PlaySound(damageSound);
-        vidas--;
-        PlayerPrefs.SetInt("Vidas", vidas);
-        PlayerPrefs.Save();
-        //FindObjectOfType<HUDController>().ActualizarHUD();
-
-        anim.SetTrigger("Hurt");
-
-        if (vidas <= 0)
-            Die();
-    }
-
-    void Die()
-    {
-        PlaySound(deathSound);
-        isDead = true;
-        anim.SetTrigger("Death");
-
-        rb.linearVelocity = Vector2.zero;
-        rb.simulated = false;
-
-        Invoke(nameof(LoadDeathScene), 2f);
-    }
-
-    void LoadDeathScene()
-    {
-        SceneManager.LoadScene("GameOver");
-    }
-    void LoadFinalLevel()
-    {
-        SceneManager.LoadScene("Map 2-3");
-    }
-
-
     void UpdateAnimations()
     {
         anim.SetFloat("verticalSpeed", rb.linearVelocity.y);
@@ -400,26 +373,104 @@ public class PlayerController : MonoBehaviour
             attackHitbox.transform.localPosition = pos;
         }
     }
+    void Attack()
+    {
+        if (Input.GetMouseButtonDown(0) && canAttack && isGrounded && !isDashAttacking)
+        {
+            StartCoroutine(AttackCoroutine());
+            PlaySound(attackSound);
+        }
+    }
+    IEnumerator AttackCoroutine()
+    {
+        canAttack = false;
+        anim.SetTrigger("Attack");
+
+        yield return new WaitForSeconds(0.1f);
+        attackHitbox.SetActive(true);
+
+        yield return new WaitForSeconds(0.2f);
+        attackHitbox.SetActive(false);
+
+        yield return new WaitForSeconds(attackCooldown);
+        canAttack = true;
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        // Recoger monedas
+        if (collision.CompareTag("PickUp"))
+        {
+            PlaySound(coinSound);
+            monedas++;
+            PlayerPrefs.SetInt("Monedas", monedas);
+            PlayerPrefs.Save();
+
+            darknessController?.UpdateScreenIcon(monedas);
+
+            Destroy(collision.gameObject);
+            return;
+        }
+
+        // Pinchos
+        if (collision.CompareTag("Pincho"))
+        {
+            TakeDamage();
+            return;
+        }
+
+        // Recoger llave
+        if (collision.CompareTag("Key") && key.isVisible)
+        {
+            ShowText("You can now unlock the door.");
+            keyCollected = true;
+            Destroy(collision.gameObject);
+            PlaySound(pickUpSound);
+            return;
+        }
+
+        // Puerta cerrada
+        if (collision.CompareTag("Door_closed"))
+        {
+            if (!keyCollected)
+            {
+                ShowText("You don't have enough coins to open the door.");
+                PlaySound(doorSound);
+            }
+            else
+            {
+                doorController.OpenDoor();
+                PlaySound(unlockSound);
+            }
+            return;
+        }
+
+        // Puerta abierta
+        if (collision.CompareTag("Door_open"))
+        {
+            PlaySound(doorSound);
+            Invoke(nameof(LoadNextLevel), 2f);
+            return;
+        }
+    }
 
     void CheckCoins()
     {
         key.CheckCoins(monedas);
+
         if (!keyAppeared && key.isVisible)
         {
             keyAppeared = true;
             ShowText("The key has been summoned.");
             PlaySound(keySound);
         }
-
     }
 
     private void PlaySound(AudioClip sound)
     {
-        if (audioSource != null && sound != null) { 
+        if (audioSource != null && sound != null)
             audioSource.PlayOneShot(sound);
-        }
-
     }
+
     private void ShowText(string mensaje)
     {
         textoTemporal.text = mensaje;

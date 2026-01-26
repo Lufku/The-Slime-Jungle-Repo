@@ -3,22 +3,23 @@ using UnityEngine.SceneManagement;
 
 public class GameOverUI : MonoBehaviour
 {
-	// Volver al menú principal
-	public void IrAlMenu()
-	{
-		SceneManager.LoadScene("Menu");
-	}
+    public void IrAlMenu()
+    {
+        SceneManager.LoadScene("Info");
+    }
 
-	// Reintentar el nivel actual
-	public void Reintentar()
-	{
-		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
-	}
+    public void Reintentar()
+    {
+        // Recuperar la escena donde murió el jugador
+        string last = PlayerPrefs.GetString("LastLevel", "Escena Level 1 Recuperada");
 
-	// Salir del juego
-	public void SalirDelJuego()
-	{
-		Application.Quit();
-		Debug.Log("Estás saliendo del juego"); // Para probar en el editor
-	}
+        // Cargar exactamente esa escena
+        SceneManager.LoadScene(last);
+    }
+
+    public void SalirDelJuego()
+    {
+        Application.Quit();
+        Debug.Log("Estás saliendo del juego");
+    }
 }
