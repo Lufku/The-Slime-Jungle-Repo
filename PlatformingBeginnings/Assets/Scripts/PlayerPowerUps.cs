@@ -18,13 +18,15 @@ public class PlayerPowerUps : MonoBehaviour
     {
         player = GetComponent<PlayerController>();
 
-        jumpLevel = PlayerPrefs.GetInt("JumpLevel", jumpLevel);
-        speedLevel = PlayerPrefs.GetInt("SpeedLevel", speedLevel);
-        damageLevel = PlayerPrefs.GetInt("DamageLevel", damageLevel);
+        // Cargar niveles guardados y evitar negativos
+        jumpLevel = Mathf.Max(0, PlayerPrefs.GetInt("JumpLevel", 0));
+        speedLevel = Mathf.Max(0, PlayerPrefs.GetInt("SpeedLevel", 0));
+        damageLevel = Mathf.Max(0, PlayerPrefs.GetInt("DamageLevel", 0));
 
-        player.jumpForce += jumpLevel * jumpBonus;
-        player.speed += speedLevel * speedBonus;
-        player.extraDamage += damageLevel * damageBonus;
+        // Aplicar stats desde los valores base
+        player.jumpForce = player.baseJumpForce + jumpLevel * jumpBonus;
+        player.speed = player.baseSpeed + speedLevel * speedBonus;
+        player.extraDamage = player.baseExtraDamage + damageLevel * damageBonus;
 
         var hud = FindFirstObjectByType<HUDController>();
         if (hud != null)
@@ -39,20 +41,21 @@ public class PlayerPowerUps : MonoBehaviour
         {
             case 0:
                 jumpLevel++;
-                player.jumpForce += jumpBonus;
+                player.jumpForce = player.baseJumpForce + jumpLevel * jumpBonus;
                 break;
 
             case 1:
                 speedLevel++;
-                player.speed += speedBonus;
+                player.speed = player.baseSpeed + speedLevel * speedBonus;
                 break;
 
             case 2:
                 damageLevel++;
-                player.extraDamage += damageBonus;
+                player.extraDamage = player.baseExtraDamage + damageLevel * damageBonus;
                 break;
         }
 
+        // Guardar niveles
         PlayerPrefs.SetInt("JumpLevel", jumpLevel);
         PlayerPrefs.SetInt("SpeedLevel", speedLevel);
         PlayerPrefs.SetInt("DamageLevel", damageLevel);
